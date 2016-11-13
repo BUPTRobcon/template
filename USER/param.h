@@ -13,7 +13,7 @@ typedef struct 		//launch链表节点数据
 
 typedef struct 		//目标线性表
 {
-	int launch_num;
+	u32 launch_num;
 	link_list launch_ptr; 
 }Target;
 
@@ -25,11 +25,14 @@ typedef struct 		//pos链表节点数据
 
 typedef struct 		//参数总结构线性表
 {
-	int pos_num;
+	u32 pos_num;
 	link_list pos_ptr;
 }Param;
 
-#define FIRST_RUN 1
+#define FIRST_RUN 1 
+#define PARAM_FLASH_SETOR ((uint16_t)0x0028) //  扇区5
+#define PARAM_FLASH_ADDR_START ((uint32_t)0x08020000)
+#define PARAM_FLASH_ADDR_END ((uint32_t)0x08020FFF)
 
 int param_init(Param * param); //初始化参数，从flash读取参数
 

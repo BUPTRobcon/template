@@ -15,6 +15,7 @@ int list_isempty(link_list *first);
 
 list_node* list_search(link_list *first,void *tmp,bool (*cmp)(void *,void *));
 list_node *list_locate(link_list *first,int i);
+void node_move(link_list* first,int i,list_node *p);
 int list_insert(link_list *first,int i,void *new_data);
 int list_remove(link_list *first,void *data,bool (*cmp)(void *,void *));
 void list_copy(link_list *dest,link_list *src);

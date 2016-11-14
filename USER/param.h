@@ -2,6 +2,7 @@
 #define __PARAM_H
 
 #include "link_list.h"
+#include "global.h"
 
 typedef struct 		//launch链表节点数据
 {
@@ -13,7 +14,7 @@ typedef struct 		//launch链表节点数据
 
 typedef struct 		//目标线性表
 {
-	int launch_num;
+	u32 launch_num;
 	link_list launch_ptr; 
 }Target;
 
@@ -25,7 +26,7 @@ typedef struct 		//pos链表节点数据
 
 typedef struct 		//参数总结构线性表
 {
-	int pos_num;
+	u32 pos_num;
 	link_list pos_ptr;
 }Param;
 
@@ -35,4 +36,14 @@ int param_init(Param * param); //初始化参数，从flash读取参数
 
 int param_save(Param * param); //将所有参数存入flash
 
+bool cmp_pos(void *a,void *b);
+bool cmp_launch(void *a,void *b);
+
+void print_pos(void *a);
+void print_launch(void *a);
+void print_launch_list(link_list p);
+void print_pos_list(link_list p);
+void print_all(Param *p);
 #endif
+
+

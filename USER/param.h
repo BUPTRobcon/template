@@ -2,6 +2,7 @@
 #define __PARAM_H
 
 #include "link_list.h"
+#include "global.h"
 
 typedef struct 		//launch链表节点数据
 {
@@ -38,4 +39,12 @@ int param_init(Param * param); //初始化参数，从flash读取参数
 
 int param_save(Param * param); //将所有参数存入flash
 
+bool cmp_pos(void *a,void *b);
+bool cmp_launch(void *a,void *b);
+
+void print_pos(void *a);
+void print_launch(void *a);
+void print_launch_list(link_list p);
+void print_pos_list(link_list p);
+void print_all(Param *p);
 #endif

@@ -104,6 +104,16 @@ void list_copy(link_list *dest,link_list *src){
     dest_ptr->link = NULL;
 }
 
+void node_move(link_list* first,int i,list_node *p){
+	list_node *t=list_locate(first,i-1);
+	list_node *q=(*first)->link;
+	while (q!=NULL && q->link!=p)
+		q=q->link;
+	q->link=p->link;
+	p->link=t->link;
+	t->link=q;
+}
+
 
 //void list_print(USART_TypeDef *USARTx,link_list *first,int param_group){
 //    int i,j;

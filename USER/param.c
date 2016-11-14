@@ -18,7 +18,7 @@ int param_init(Param * param)
 	Launch_data * launch_data;
 	param = (Param *) malloc(sizeof(Param));
 	list_init(&param->pos_ptr);
-#if FIRST_RUN == 1
+#if FIRST_RUN
 	param->pos_num = 0;
 #else 
 	param->pos_num = STMFLASH_ReadWord_Inc(&addr);
@@ -41,12 +41,12 @@ int param_init(Param * param)
 				launch_data->speed = STMFLASH_ReadFloat_Inc(&addr);
 				launch_data->yaw = STMFLASH_ReadFloat_Inc(&addr);
 				
-				if(!list_insert(pos_data->d[i].launch_ptr, k, launch_data))
+				if(!list_insert(pos_data->d[i].launch_ptr, k+1, launch_data))
 					return 0;
 			}
 		}
 
-		if(list_insert(param->pos_ptr, i, pos_data))
+		if(list_insert(param->pos_ptr, i+1, pos_data))
 			return 0;
 	}
 #endif
@@ -95,6 +95,7 @@ int param_save(Param * param)
 
 		for (i = 0; i < 7; ++i)
 		{
+			pos_data->d[i].launch_num = list_get_length(&(pos_data->d[i].launch_ptr));
 			FLASH_ProgramWord(addr, pos_data->d[i].launch_num);
 			launch_ptr = pos_data->d[i].launch_ptr->link;
 

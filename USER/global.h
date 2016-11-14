@@ -10,6 +10,11 @@
 #define USART_printf USART1
 #define _printf 1
 
+#ifndef bluetooth
+#define bluetooth UART5
+#endif
+
+
 #define STR_BUFFER_LEN 128
 
 #define USART_REC_LEN  			200 

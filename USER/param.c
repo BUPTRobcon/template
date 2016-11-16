@@ -41,12 +41,12 @@ int param_init(Param * param)
 				launch_data->speed = STMFLASH_ReadFloat_Inc(&addr);
 				launch_data->yaw = STMFLASH_ReadFloat_Inc(&addr);
 				
-				if(!list_insert(pos_data->d[i].launch_ptr, k+1, launch_data))
+				if(!list_insert(&pos_data->d[i].launch_ptr, k+1, launch_data))
 					return 0;
 			}
 		}
 
-		if(list_insert(param->pos_ptr, i+1, pos_data))
+		if(list_insert(&param->pos_ptr, i+1, pos_data))
 			return 0;
 	}
 #endif
@@ -247,3 +247,5 @@ void print_all(Param *p){
 		ptr=ptr->link;
 	}
 }
+
+

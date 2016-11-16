@@ -48,12 +48,6 @@ void print_launch_list(link_list p);
 void print_pos_list(link_list p);
 void print_all(Param *p);
 
-/*void insert_pos(int i, float x, float y);
-void insert_launch(int i,float pitch,float roll,float speed,float yaw);
-
-Pos_data * get_pos_data(int pos_id);
-Launch_data * get_launch_data(int pos_id, int launch_id); 
-*/
 #endif
 
 

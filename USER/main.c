@@ -2,6 +2,7 @@
 #include "global.h"
 #include "can.h"
 
+u8 target;
 
 void can_msg_rcv_callback(CanRxMsg *can_rx_msg);
 

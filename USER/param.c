@@ -2,15 +2,17 @@
 #include "flash.h"
 #include <stdlib.h>
 
+Param * param;//参数/
+
 /**
   * @brief  初始化参数结构体
   *
-  * @param  param: 参数指针  
+  * @param  param: 参数指针  此处作为全局变量而不包含
   *          
   * @retval int: 返回0，出错，程序直接退出
   *				返回1，初始化成功
   */
-int param_init(Param * param)
+int param_init()
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	int i, j, k;
@@ -56,12 +58,12 @@ int param_init(Param * param)
 /**
   * @brief  初始化参数结构体
   *
-  * @param  param: 参数指针  
+  * @param  param: 参数指针 此处作为全局变量而不包含 
   *          
   * @retval int: 返回<0，出错，程序直接退出
   *				返回1，保存
   */
-int param_save(Param * param)
+int param_save()
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	list_node * pos_ptr;
@@ -247,5 +249,3 @@ void print_all(Param *p){
 		ptr=ptr->link;
 	}
 }
-
-

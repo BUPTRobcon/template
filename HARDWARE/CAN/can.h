@@ -16,7 +16,7 @@
  *          作为参数来执行函数can_init(msg_rcv_func),msg_rcv_func()函数就会在接收到
  *          can总线数据之后自动调用。msg_rcv_func()函数的参数必须为CanRxMsg类型而
  *          且返回值是void，也即函数必须定义成这样(函数名无所谓):
- *                      void msg_rcv_func(CanRxMsg can_rx_msg){
+ *                      void msg_rcv_func(CanRxMsg* can_rx_msg){
  *                          
  *                      }
  *              结构体can_rx_msg是CAN总线接收到的数据，可以在函数msg_rcv_func()

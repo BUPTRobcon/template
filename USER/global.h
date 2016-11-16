@@ -36,3 +36,8 @@ void EXTI_Configuration(uint32_t EXTI_Line,
                 FunctionalState EXTI_LineCmd);
 void nvic_config(void);
 void USART_SendString(USART_TypeDef* USARTx, char *fmt, ...);
+
+extern u8 cmd,sticks[4];
+
+
+

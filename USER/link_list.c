@@ -75,7 +75,7 @@ int list_insert(link_list *first,int i,void *new_data){
     return 1;
 }
 
-int list_remove(link_list *first,void *data,bool (*cmp)(void *,void *)){
+int list_remove_data(link_list *first,void *data,bool (*cmp)(void *,void *)){
     list_node *q = *first,*p = (*first)->link;
     while(p != NULL&&!cmp(data,p->data)){
         q = q->link;
@@ -85,6 +85,21 @@ int list_remove(link_list *first,void *data,bool (*cmp)(void *,void *)){
         return 0;
     }
     q->link = p->link;
+//    free(p->data);      //    attention
+    free(p);
+    return 1;
+}
+
+int list_remove_num(link_list *first,int t){
+    list_node *p = (list_node*)first;
+	int i=0;
+    while(p ->link!= NULL&&++i!=t){
+        p = p->link;
+    }
+    if(p->link == NULL){
+        return 0;
+    }
+    p->link = p->link->link;
 //    free(p->data);      //    attention
     free(p);
     return 1;

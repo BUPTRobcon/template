@@ -59,7 +59,7 @@ int main(void)
 {   //system_stm32f4xx.c #define PLL_M=8 PLL_N=336 HSE -> SYSCLK 168MHZ
 	// RCC->CFGR |= RCC_CFGR_PPRE2_DIV2; APHB1_CLK 84MHZ
 	//AHB 168MHZ  APB2 84MHZ  APB1 42MHZ
-	
+	int i;
 	delay_init(168);  //初始化延时函数
 	uart_init(115200);//初始化串口波特率为9600
 	SPI2_Init();
@@ -67,6 +67,13 @@ int main(void)
     while(1) 
 	{
 		controller_check();
+		if (UART5_RX_STA&0x8000){
+			USART_SendString(UART5,":%s\n",UART5_RX_BUF);
+			USART_SendString(USART1,"\r%s\r",UART5_RX_BUF);
+			for (i=0;i<(UART5_RX_STA&0x3fff);i++)
+				UART5_RX_BUF[i]=0;
+			UART5_RX_STA=0;
+		}
 	}
 }
 

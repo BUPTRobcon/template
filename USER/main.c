@@ -3,6 +3,10 @@
 #include "can.h"
 #include "TIM.h"
 
+extern u8 cmd,sticks[4];
+extern u8 ptr;
+extern int wait_cnt;
+
 //--------------暂时用来草稿-------------
 extern int TIM3_round,TIM4_round;
 typedef struct 
@@ -43,6 +47,10 @@ void TIM2_IRQHandler(void){
 	u8 i;
 	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
 		{
+			if (wait_cnt>-1)
+				if (++wait_cnt==200)
+				{	USART_SendString(UART5,"Good to go\n");
+					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
 			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
 			for (i=0;i<4;i++) 
 			 {
@@ -66,8 +74,10 @@ int main(void)
 	delay_init(168);  //初始化延时函数
 	rcc_config();
 	gpio_config();
+	EXTI_config();
 	nvic_config();
 	uart_init(115200);//初始化串口波特率为9600
+	TIM2_Init();
 	TIM3_Init();
 	TIM4_Init();
 //	SPI2_Init();

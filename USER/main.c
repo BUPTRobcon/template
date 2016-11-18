@@ -68,6 +68,7 @@ int main(void)
 	gpio_config();
 	nvic_config();
 	uart_init(115200);//初始化串口波特率为9600
+	TIM2_Init();
 	TIM3_Init();
 	TIM4_Init();
 //	SPI2_Init();

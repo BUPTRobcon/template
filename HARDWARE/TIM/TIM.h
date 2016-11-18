@@ -2,9 +2,9 @@
 #define __TIM_H
 #include "global.h"
 
-void TIM3_Init();
-void TIM3_Init();
-void TIM4_Init();
+void TIM2_Init(void);
+void TIM3_Init(void);
+void TIM4_Init(void);
 
 #endif
 

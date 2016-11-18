@@ -55,7 +55,7 @@ void TIM3_Init(){
 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 	TIM_Cmd(TIM3, ENABLE);	
 }
-void TIM2_Configuration()        //0.005ms 定时
+void TIM2_Init()        //0.005ms 定时
 {
 	/*TIM2*/
 	NVIC_InitTypeDef NVIC_InitStructure;
@@ -73,11 +73,6 @@ void TIM2_Configuration()        //0.005ms 定时
 	TIM_ClearFlag(TIM2, TIM_FLAG_Update);
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 	TIM_Cmd(TIM2, ENABLE);	
-	NVIC_InitStructure.NVIC_IRQChannel=TIM2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =1;//1
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority =0;//0
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
 }
 
 void TIM3_IRQHandler(){

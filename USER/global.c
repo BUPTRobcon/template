@@ -171,6 +171,7 @@ void nvic_config()
 	
 	NVIC_Configuration(UART5_IRQn,3,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
+	NVIC_Configuration(TIM2_IRQn,1,3,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,0,ENABLE);
 	NVIC_Configuration(TIM4_IRQn,1,0,ENABLE);
 	

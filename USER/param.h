@@ -48,6 +48,11 @@ void print_launch_list(link_list p);
 void print_pos_list(link_list p);
 void print_all(Param *p);
 
+void clear_launch(link_list * first);
+void clear_pos(link_list * first);
+
+Pos_data * local_pos(int no);
+
 #endif
 
 

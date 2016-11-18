@@ -249,3 +249,42 @@ void print_all(Param *p){
 		ptr=ptr->link;
 	}
 }
+
+void clear_launch(link_list * first)
+{
+	Launch_data * data;
+	list_node * launch = (*first)->link;
+	while(launch != NULL)
+	{
+		data = launch->data;
+		free(data);
+		launch = launch->link;
+	}
+	list_clear(first);
+	free(first);
+}
+
+void clear_pos(link_list * first)
+{
+	list_node * pos = (*first)->link;
+	Pos_data *data;
+	while(pos!=NULL)
+	{
+		data = pos->data;
+		for (int i = 0; i < 7; ++i)
+		{
+			clear_launch(&data->d[i].launch_ptr);
+		}
+		free(data);
+		pos = pos->link;
+	}
+	list_clear(first);
+	free(first);
+}
+
+Pos_data * local_pos(int no)
+{
+	Pos_data * data;
+	data = list_locate(&param->pos_ptr, no);
+	return data;
+}

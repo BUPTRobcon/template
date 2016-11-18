@@ -2,7 +2,10 @@
 #include "global.h"
 #include "can.h"
 
+bool g_stop_flag;
 u8 target;
+float g_vega_x;
+float g_vega_y;
 
 void can_msg_rcv_callback(CanRxMsg *can_rx_msg);
 

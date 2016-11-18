@@ -285,6 +285,11 @@ void clear_pos(link_list * first)
 Pos_data * local_pos(int no)
 {
 	Pos_data * data;
-	data = list_locate(&param->pos_ptr, no);
-	return data;
+	list_node * ptr;
+	ptr = list_locate(&param->pos_ptr, no);
+	if (ptr == NULL)
+	{
+		return NULL;
+	}
+	return ptr->data;
 }

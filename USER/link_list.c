@@ -58,7 +58,7 @@ list_node *list_locate(link_list *first,int i){
         k++;
         p = p->link;
     }
-    return p;
+    return p;  
 }
 
 

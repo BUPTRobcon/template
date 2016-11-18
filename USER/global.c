@@ -93,6 +93,8 @@ int fputc(int ch, FILE *f)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);//使能SPI1时钟
 	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);	//使能USART1时钟
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5,ENABLE);	//使能USART5时钟	
 }
 
@@ -106,6 +108,11 @@ void gpio_config(void)
 	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOB);
 	GPIO_PinAFConfig(GPIOB,GPIO_PinSource6,GPIO_AF_USART1); //GPIOB6复用为USART1
 	GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_USART1); //GPIOB7复用为USART1
+	
+	GPIO_Configuration(GPIO_Pin_5 | GPIO_Pin_6,GPIO_Mode_AF,
+	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOB);
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource5,GPIO_AF_USART2); 
+	GPIO_PinAFConfig(GPIOD,GPIO_PinSource6,GPIO_AF_USART2); 
 	
 	GPIO_Configuration(GPIO_Pin_2 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_8 | GPIO_Pin_9,
 					   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOD);
@@ -164,6 +171,8 @@ void nvic_config()
 	
 	NVIC_Configuration(UART5_IRQn,3,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
+	NVIC_Configuration(TIM3_IRQn,1,0,ENABLE);
+	NVIC_Configuration(TIM4_IRQn,1,0,ENABLE);
 	
 //	NVIC_InitStructure.NVIC_IRQChannel=SPI1_IRQn;
 //    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;//1

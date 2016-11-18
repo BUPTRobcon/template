@@ -4,6 +4,8 @@ TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
 TIM_ICInitTypeDef   TIM_ICInitStructure;
 
+int TIM3_round,TIM4_round;
+
 void TIM4_Init(){
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
@@ -21,7 +23,8 @@ void TIM4_Init(){
 	TIM_ICInitStructure.TIM_ICFilter = 6;
 	TIM_ICInit(TIM4, &TIM_ICInitStructure);
 
-//  TIM4->CNT=4000;
+	TIM4->CNT=0;
+	TIM4_round=0;
 
 	TIM_ClearFlag(TIM4, TIM_FLAG_Update);
 	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
@@ -29,7 +32,7 @@ void TIM4_Init(){
 }
 
 void TIM3_Init(){
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
 	TIM_DeInit(TIM3);
    
@@ -45,7 +48,8 @@ void TIM3_Init(){
 	TIM_ICInitStructure.TIM_ICFilter = 6;
 	TIM_ICInit(TIM3, &TIM_ICInitStructure);
 
-//  TIM4->CNT=4000;
+	TIM3->CNT=0;
+	TIM3_round=0;
 
 	TIM_ClearFlag(TIM3, TIM_FLAG_Update);
 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
@@ -76,7 +80,19 @@ void TIM2_Configuration()        //0.005ms ¶¨Ê±
     NVIC_Init(&NVIC_InitStructure);
 }
 
-
-
+void TIM3_IRQHandler(){
+	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
+		if (TIM3->CNT==0) TIM3_round-=1;
+		else if (TIM3->CNT==TIM3->ARR) TIM3_round+=1;
+		TIM_ClearITPendingBit(TIM3,TIM_FLAG_Update);
+	}
+}
+void TIM4_IRQHandler(){
+	if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET){
+		if (TIM4->CNT==0) TIM4_round-=1;
+		else if (TIM4->CNT==TIM4->ARR) TIM4_round+=1;
+		TIM_ClearITPendingBit(TIM4,TIM_FLAG_Update);
+	}
+}
 
 

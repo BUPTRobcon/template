@@ -1,8 +1,10 @@
 #include "spi.h"
 #include "global.h"
 #include "can.h"
+#include "TIM.h"
 
 //--------------暂时用来草稿-------------
+extern int TIM3_round,TIM4_round;
 typedef struct 
 {
 	bool ispressed;
@@ -59,14 +61,28 @@ int main(void)
 {   //system_stm32f4xx.c #define PLL_M=8 PLL_N=336 HSE -> SYSCLK 168MHZ
 	// RCC->CFGR |= RCC_CFGR_PPRE2_DIV2; APHB1_CLK 84MHZ
 	//AHB 168MHZ  APB2 84MHZ  APB1 42MHZ
+	int TIM3_display=0,TIM4_display=0;
 	
 	delay_init(168);  //初始化延时函数
+	rcc_config();
+	gpio_config();
+	nvic_config();
 	uart_init(115200);//初始化串口波特率为9600
-	SPI2_Init();
+	TIM3_Init();
+	TIM4_Init();
+//	SPI2_Init();
 //	can_add_callback();
     while(1) 
 	{
 		controller_check();
+		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
+			TIM3_display=TIM3_round*30000-TIM3->CNT;
+			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
+		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
+			TIM4_display=TIM4_round*30000-TIM4->CNT;
+			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		
+//			USART_SendString(UART5,"TIM3:%d\n",TIM3_round*30000+TIM3->CNT);
+//			USART_SendString(UART5,"TIM4:%d\n",TIM4_round*30000+TIM4->CNT);
 	}
 }
 

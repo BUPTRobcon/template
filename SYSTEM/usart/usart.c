@@ -17,6 +17,8 @@ void uart_init(u32 bound){
    
 	USART_Init(USART1, &USART_InitStructure); //初始化串口1
     USART_Cmd(USART1, ENABLE);  //使能串口1
+	USART_Init(USART2, &USART_InitStructure); //初始化串口1
+    USART_Cmd(USART2, ENABLE);  //使能串口1
 	USART_Init(UART5, &USART_InitStructure); //初始化串口5
     USART_Cmd(UART5, ENABLE);  //使能串口5
 	USART_Init(USART3, &USART_InitStructure); //初始化串口3
@@ -36,25 +38,29 @@ void UART5_IRQHandler(void)                	//串口5中断服务程序
        // RXNE准备好读取接收到的数据 1<<5
 	{
 		Res =USART_ReceiveData(UART5);//(USART1->DR);	//读取接收到的数据   中断标志已清除
-		
-		if((UART5_RX_STA&0x8000)==0)//接收未完成   0x8000=1<<15
-		{
-			if(UART5_RX_STA&0x4000)//接收到了0x0d  0x4000=1<<14
-			{
-				if(Res!=0x0a)UART5_RX_STA=0;//接收错误,重新开始
-				else UART5_RX_STA|=0x8000;	//接收完成了 	   
-			}
-			else //还没收到0X0D
-			{	
-				if(Res==0x0d)UART5_RX_STA|=0x4000;
-				else
-				{
-					UART5_RX_BUF[UART5_RX_STA&0X3FFF]=Res ;
-					UART5_RX_STA++;
-					if(UART5_RX_STA>(USART_REC_LEN-1))UART5_RX_STA=0;//接收数据错误,重新开始接收	  
-				}		 
-			}
-		}   		 
+		if (Res=='8') USART_SendString(USART2,"3v200\r");
+		else if(Res=='2') USART_SendString(USART2,"3v-200\r");
+		else if(Res=='6') USART_SendString(USART2,"0v-200\r");
+		else if(Res=='4') USART_SendString(USART2,"0v200\r");
+		else {USART_SendString(USART2,"0v0\r");USART_SendString(USART2,"3v0\r");}
+//		if((UART5_RX_STA&0x8000)==0)//接收未完成   0x8000=1<<15
+//		{
+//			if(UART5_RX_STA&0x4000)//接收到了0x0d  0x4000=1<<14
+//			{
+//				if(Res!=0x0a)UART5_RX_STA=0;//接收错误,重新开始
+//				else UART5_RX_STA|=0x8000;	//接收完成了 	   
+//			}
+//			else //还没收到0X0D
+//			{	
+//				if(Res==0x0d)UART5_RX_STA|=0x4000;
+//				else
+//				{
+//					UART5_RX_BUF[UART5_RX_STA&0X3FFF]=Res ;
+//					UART5_RX_STA++;
+//					if(UART5_RX_STA>(USART_REC_LEN-1))UART5_RX_STA=0;//接收数据错误,重新开始接收	  
+//				}		 
+//			}
+//		}   		 
      } 
 } 
 

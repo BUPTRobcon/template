@@ -332,7 +332,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\HARDWARE\controller;..\HARDWARE\SPI;..\HARDWARE\flash;..\HARDWARE\CAN;..\HARDWARE\vega;..\HARDWARE\TIM</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\HARDWARE\controller;..\HARDWARE\SPI;..\HARDWARE\flash;..\HARDWARE\CAN;..\HARDWARE\vega;..\HARDWARE\TIM;..\HARDWARE\EXTI</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -439,6 +439,11 @@
               <FileName>TIM.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\TIM\TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\EXTI\exti.c</FilePath>
             </File>
           </Files>
         </Group>

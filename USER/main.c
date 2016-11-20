@@ -48,7 +48,7 @@ void TIM2_IRQHandler(void){
 	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
 		{
 			if (wait_cnt>-1)
-				if (++wait_cnt==200)
+				if (++wait_cnt==50)
 				{	USART_SendString(UART5,"Good to go\n");
 					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
 			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断

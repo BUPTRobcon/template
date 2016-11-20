@@ -2,6 +2,7 @@
 
 GPIO_InitTypeDef GPIO_InitStructure;
 NVIC_InitTypeDef NVIC_InitStructure;
+EXTI_InitTypeDef exti_init_structure;
 
 /*
  *º¯ÊýÃû£ºvoid GPIO_Configuration(uint16_t GPIO_Pin,
@@ -162,7 +163,6 @@ void EXTI_Configuration(uint32_t EXTI_Line,
                 EXTITrigger_TypeDef EXTI_Trigger,
                 FunctionalState EXTI_LineCmd)
 {
-    EXTI_InitTypeDef exti_init_structure;
     exti_init_structure.EXTI_Line = EXTI_Line;
     exti_init_structure.EXTI_Mode = EXTI_Mode;
     exti_init_structure.EXTI_Trigger = EXTI_Trigger;
@@ -174,8 +174,8 @@ void EXTI_config()
 {
 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOF, EXTI_PinSource11);
 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource14);
-	EXTI_Configuration(EXTI_Line11,EXTI_Mode_Interrupt,EXTI_Trigger_Rising_Falling,ENABLE);
-	EXTI_Configuration(EXTI_Line14,EXTI_Mode_Interrupt,EXTI_Trigger_Rising_Falling,ENABLE);
+	EXTI_Configuration(EXTI_Line11,EXTI_Mode_Interrupt,EXTI_Trigger_Falling,ENABLE);
+	EXTI_Configuration(EXTI_Line14,EXTI_Mode_Interrupt,EXTI_Trigger_Falling,ENABLE);
 	EXTI_ClearITPendingBit(EXTI_Line11); 
 	EXTI_ClearITPendingBit(EXTI_Line14); 
 }

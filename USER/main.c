@@ -66,7 +66,7 @@ void pitch_move(float v){
 		v = 600;
 	else if (v + 600.f < 0.00000000001)
 		v=-600;
-	USART_SendString(USART2,"3v%d\r",v);
+	USART_SendString(USART2,"3v%d\r",(int)v);
 }
 
 
@@ -104,17 +104,17 @@ int main(void)
 					pitch_move(0);
 				}else{
 					pitch_cnt++;
-					pitch_move(d_pitch * 10 + dd_pitch * 5);
+					pitch_move(d_pitch * 300 + dd_pitch * 240);
 				}
 			}else{
 				pitch_cnt=0;
-				pitch_move(d_pitch * 10 + dd_pitch * 5);
+				pitch_move(d_pitch * 300 + dd_pitch * 240);
 			}
 		}
 		controller_check();
-		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
-			TIM3_display=TIM3_round*30000-TIM3->CNT;
-			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
+//		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
+//			TIM3_display=TIM3_round*30000-TIM3->CNT;
+//			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
 		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
 			TIM4_display=TIM4_round*30000-TIM4->CNT;
 			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		

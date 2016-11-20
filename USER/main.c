@@ -2,8 +2,14 @@
 #include "global.h"
 #include "can.h"
 #include "TIM.h"
+#include "math.h"
 
 //--------------暂时用来草稿-------------
+
+float d_pitch=0,dd_pitch=0,last_d_pitch=0;
+float now_pitch,pur_pitch;
+int pitch_cnt=0;
+
 extern int TIM3_round,TIM4_round;
 typedef struct 
 {
@@ -53,6 +59,16 @@ void TIM2_IRQHandler(void){
 			//USART_SendString(UART5,"%d\n",rounds*2000 + TIM4->CNT);
 		}	
 }
+void pitch_move(float v){
+	if (v - 600.f > 0.0000000001)
+		v = 600;
+	else if (v + 600.f < 0.00000000001)
+		v=-600;
+	USART_SendString(USART2,"3v%d\r",v);
+}
+
+
+
 //-----------------草稿结束------------------------
 
 void can_msg_rcv_callback(CanRxMsg *can_rx_msg);
@@ -75,6 +91,21 @@ int main(void)
 //	can_add_callback();
     while(1) 
 	{
+		now_pitch = (TIM3_round * 30000.f - TIM3->CNT)/10000.f;
+		d_pitch = pur_pitch - now_pitch;
+		dd_pitch = d_pitch - last_d_pitch;
+		last_d_pitch = d_pitch;
+		if (fabs(d_pitch)<0.01){
+			if (pitch_cnt > 10){
+				pitch_move(0);
+			}else{
+				pitch_cnt++;
+				pitch_move(d_pitch * 10 + dd_pitch * 5);
+			}
+		}else{
+			pitch_cnt=0;
+			pitch_move(d_pitch * 10 + dd_pitch * 5);
+		}
 		controller_check();
 		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
 			TIM3_display=TIM3_round*30000-TIM3->CNT;

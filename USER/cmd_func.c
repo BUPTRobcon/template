@@ -13,6 +13,7 @@ extern float g_vega_x;
 extern float g_vega_y;
 static list_node * now_pos_ptr;
 static Pos_data * now_pos;     //当前点的数据指针
+static float motor_v;
 
 void cmd_reboot_func(int argc,char *argv[]){
     NVIC_SystemReset();

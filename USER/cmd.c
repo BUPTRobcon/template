@@ -1,6 +1,7 @@
 #include "cmd.h"
 #include "stm32f4xx_usart.h"
 #include "stdlib.h"
+#include "global.h"
 #include "string.h"
 #include "stdarg.h"
 #include "cmd_func.h"
@@ -27,7 +28,7 @@ static cmd_struct cmd_tbl[] = {
 static char cmd_line[MAX_CMD_LINE_LENGTH + 1];
 static char *cmd_argv[MAX_ARGC]; 
 
-void cmd_init(){
+void cmd_init(void){
     int i;
 #if CMD_PERIPH_INIT_EN == 1
     USART_InitTypeDef usart_init_stru;
@@ -161,7 +162,7 @@ void UART5_IRQHandler(void){
         USART_ClearITPendingBit(CMD_USARTx,USART_IT_RXNE);
         c_recv = USART_ReceiveData(CMD_USARTx);			  
         if(c_recv == '\r'){  //接受完一次指令
-            if(cmd_line_index == 0){
+            if(cmd_line_length == 0){
                 return;
             }
             cmd_line[cmd_line_length++] = (char)c_recv;
@@ -173,9 +174,9 @@ void UART5_IRQHandler(void){
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
                 return;
                 }else if(erro_n == -2){
-                    uprintf(CMD_USARTx,"命令参数长度过长\n");
+                    USART_SendString(CMD_USARTx,"命令参数长度过长\n");
                 }else if(erro_n == -1){
-                    uprintf(CMD_USARTx,"命令参数过多\n");
+                    USART_SendString(CMD_USARTx,"命令参数过多\n");
                 }
                 cmd_line_length = 0;
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
@@ -185,7 +186,7 @@ void UART5_IRQHandler(void){
             if(erro_n < 0){
                 //打印函数执行错误信息
                 if(erro_n == -2){
-                  	  uprintf(CMD_USARTx,"未找到命令:%s\r\n",cmd_argv[0]);
+                  	  USART_SendString(CMD_USARTx,"未找到命令:%s\r\n",cmd_argv[0]);
                 }
                 cmd_line_length = 0;
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
@@ -194,7 +195,7 @@ void UART5_IRQHandler(void){
             cmd_line_length = 0;
             memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
         }else{
-            if(cmd_line_index == MAX_CMD_LINE_LENGTH){
+            if(cmd_line_length == MAX_CMD_LINE_LENGTH){
                 //打印命令行太长的信息
                 cmd_line_length = 0;
                 return;
@@ -209,10 +210,10 @@ void cmd_help_func(int argc,char *argv[]){
     u32 cmd_num;
     cmd_num = sizeof(cmd_tbl)/sizeof(cmd_tbl[0]);
     if(argc > 1){
-        uprintf(CMD_USARTx,"help命令参数过多\n");		
+        USART_SendString(CMD_USARTx,"help命令参数过多\n");		
         return;			
     }
     for(i = 0;i < cmd_num;i++){  
-        uprintf(CMD_USARTx,"cmd:%s   usage:%s\n",cmd_tbl[i].cmd_name,cmd_tbl[i].cmd_usage);
+        USART_SendString(CMD_USARTx,"cmd:%s   usage:%s\n",cmd_tbl[i].cmd_name,cmd_tbl[i].cmd_usage);
     }
 }

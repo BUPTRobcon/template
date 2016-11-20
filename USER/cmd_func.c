@@ -73,7 +73,7 @@ void cmd_pos_func(int argc,char *argv[])
         if (ptr != NULL)
         {
             data = ptr->data;
-            for (int i = 0; i < 7; ++i)
+            for (i = 0; i < 7; ++i)
             {
                 clear_launch(&data->d[i].launch_ptr); 
             }
@@ -83,10 +83,10 @@ void cmd_pos_func(int argc,char *argv[])
         }
         print_pos_list(param->pos_ptr);
     }else if(strcmp(argv[1],"clear") == 0){
-        clear_pos(param->pos_ptr);
+        clear_pos(&param->pos_ptr);
         param->pos_num = 0;
     }else if(strcmp(argv[1],"save") == 0){
-        erro_no = param_save(param);
+        erro_no = param_save();
         if(erro_no < 0){
             USART_SendString(CMD_USARTx,"Save error:%d\n",erro_no);
         }
@@ -134,7 +134,7 @@ void cmd_action_func(int argc,char *argv[])
         //跑到下一个点
     }else if (argc == 2){
         no = atoi(argv[1]);
-        ptr = list_locate(param->pos_ptr, no);
+        ptr = list_locate(&param->pos_ptr, no);
         now_pos = ptr->data;
         now_pos_ptr = ptr;
         //跑到指定的点去
@@ -167,10 +167,11 @@ void cmd_speed_func(int argc,char *argv[])
 void cmd_launch_func(int argc,char *argv[])
 {
     int no, no0;
+	int erro_no;
     float pitch, roll, speed, yaw;
     Launch_data * data;
     list_node * ptr;
-    if (argc = 1)
+    if (argc == 1)
     {
         //如果没开无刷，那就开无刷，转一圈推飞盘
     }else if (strcmp(argv[1], "now"))
@@ -212,7 +213,7 @@ void cmd_launch_func(int argc,char *argv[])
             USART_SendString(CMD_USARTx,"  launch add <no> <pitch> <roll> <speed> <yaw>\n");
             return;
         }
-        no = atoi(argv[2])
+        no = atoi(argv[2]);
         pitch = atof(argv[3]);
         roll = atof(argv[4]);
         speed = atof(argv[5]);
@@ -233,7 +234,7 @@ void cmd_launch_func(int argc,char *argv[])
             USART_SendString(CMD_USARTx,"  launch add <no> <pitch> <roll> <speed> <yaw>\n");
             return;
         }
-        no = argv[2];
+        no = atoi(argv[2]);
         ptr = list_locate(&now_pos->d[target].launch_ptr, no);
         if (ptr == NULL)
         {
@@ -241,10 +242,10 @@ void cmd_launch_func(int argc,char *argv[])
             return;
         }
         data = ptr->data;
-        data->pitch = argv[3];
-        data->roll = argv[4];
-        data->speed = argv[5];
-        data->yaw = argv[6];
+        data->pitch = atof(argv[3]);
+        data->roll = atof(argv[4]);
+        data->speed = atof(argv[5]);
+        data->yaw = atof(argv[6]);
         print_launch_list(now_pos->d[target].launch_ptr);
     }else if (strcmp(argv[1], "jmp"))
     {
@@ -280,6 +281,6 @@ void cmd_launch_func(int argc,char *argv[])
             list_remove_num(&now_pos->d[target].launch_ptr, now_pos->d[target].launch_num);
             now_pos->d[target].launch_num-=1;
         }
-        print_launch_list(now_pos->d[i].launch_ptr);
+        print_launch_list(now_pos->d[target].launch_ptr);
     }
 }

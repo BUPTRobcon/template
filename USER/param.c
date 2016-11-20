@@ -12,7 +12,7 @@ Param * param;//参数/
   * @retval int: 返回0，出错，程序直接退出
   *				返回1，初始化成功
   */
-int param_init()
+int param_init(void)
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	int i, j, k;
@@ -63,7 +63,7 @@ int param_init()
   * @retval int: 返回<0，出错，程序直接退出
   *				返回1，保存
   */
-int param_save()
+int param_save(void)
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	list_node * pos_ptr;
@@ -268,10 +268,11 @@ void clear_pos(link_list * first)
 {
 	list_node * pos = (*first)->link;
 	Pos_data *data;
+	int i;
 	while(pos!=NULL)
 	{
 		data = pos->data;
-		for (int i = 0; i < 7; ++i)
+		for (i = 0; i < 7; ++i)
 		{
 			clear_launch(&data->d[i].launch_ptr);
 		}

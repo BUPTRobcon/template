@@ -10,6 +10,8 @@ float d_pitch=0,dd_pitch=0,last_d_pitch=0;
 float now_pitch,pur_pitch;
 int pitch_cnt=0;
 
+int flag=0;
+
 extern int TIM3_round,TIM4_round;
 typedef struct 
 {
@@ -91,20 +93,23 @@ int main(void)
 //	can_add_callback();
     while(1) 
 	{
-		now_pitch = (TIM3_round * 30000.f - TIM3->CNT)/10000.f;
-		d_pitch = pur_pitch - now_pitch;
-		dd_pitch = d_pitch - last_d_pitch;
-		last_d_pitch = d_pitch;
-		if (fabs(d_pitch)<0.01){
-			if (pitch_cnt > 10){
-				pitch_move(0);
+		if (flag==1){
+			now_pitch = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
+			d_pitch = pur_pitch - now_pitch;
+			dd_pitch = d_pitch - last_d_pitch;
+			last_d_pitch = d_pitch;
+			if (fabs(d_pitch)<0.01){
+				if (pitch_cnt > 10){
+					flag=0;
+					pitch_move(0);
+				}else{
+					pitch_cnt++;
+					pitch_move(d_pitch * 10 + dd_pitch * 5);
+				}
 			}else{
-				pitch_cnt++;
+				pitch_cnt=0;
 				pitch_move(d_pitch * 10 + dd_pitch * 5);
 			}
-		}else{
-			pitch_cnt=0;
-			pitch_move(d_pitch * 10 + dd_pitch * 5);
 		}
 		controller_check();
 		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){

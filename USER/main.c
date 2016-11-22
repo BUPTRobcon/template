@@ -81,19 +81,19 @@ void TIM2_IRQHandler(void){
 		}	
 }
 void pitch_move(float v){
-	if (v - 1200.f > 0.0000001)
-		v = 1200;
-	else if (v + 1200.f < 0.0000001)
-		v=-1200;
+	if (v - 600.f > 0.0000001)
+		v = 600;
+	else if (v + 600.f < 0.0000001)
+		v=-600;
 	USART_SendString(USART2,"3v%d\r",(int)v);
 }
 
 void roll_move(float v){
-	if (v - 1200.f > 0.0000001)
-		v = 1200;
-	else if (v + 1200.f < 0.0000001)
-		v=-1200;
-	USART_SendString(USART2,"0v%d\r",(int)v);
+	if (v - 600.f > 0.0000001)
+		v = 600;
+	else if (v + 600.f < 0.0000001)
+		v=-600;
+	USART_SendString(USART2,"0v%d\r",-(int)v);
 }
 
 
@@ -116,6 +116,7 @@ int main(void)
 	TIM2_Init();
 	TIM3_Init();
 	TIM4_Init();
+	TIM8_Init();
 //	SPI2_Init();
 	uart_init(115200);//初始化串口波特率为115200
 	SPI2_Init();
@@ -143,7 +144,7 @@ int main(void)
 			}
 		}
 		if (roll_flag==1){
-			now_roll = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
+			now_roll = (TIM3_round * 30000.f - TIM3->CNT)/10000.f;
 			d_roll = pur_roll - now_roll;
 			dd_roll = d_roll - last_d_roll;
 			last_d_roll = d_roll;

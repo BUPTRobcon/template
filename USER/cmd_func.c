@@ -11,9 +11,15 @@ extern bool g_stop_flag;
 u8 target=1;       //目标0-6
 extern float g_vega_x;
 extern float g_vega_y;
+extern int TIM3_round,TIM4_round;
 static list_node * now_pos_ptr;
 static Pos_data * now_pos;     //当前点的数据指针
 static float motor_v;
+
+extern float pur_pitch;
+extern float pur_roll;
+
+extern int pitch_flag,roll_flag;
 
 void cmd_reboot_func(int argc,char *argv[]){
     NVIC_SystemReset();
@@ -182,11 +188,13 @@ void cmd_launch_func(int argc,char *argv[])
     list_node * ptr;
     if (argc == 1)
     {
+		
         //如果没开无刷，那就开无刷，转一圈推飞盘
     }else if (strcmp(argv[1], "now")==0)
     {
         //发射参数
-        //USART_SendString(CMD_USARTn, "", g_vega_x,g_vega_y);
+        USART_SendString(CMD_USARTx, "pitch:%.3f roll:.3%f speed:0 yaw:0\n",
+				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f);
     }else if (strcmp(argv[1],"start")==0)
     {
         //如果没有开无刷，那就开无刷，一直推飞盘
@@ -207,11 +215,36 @@ void cmd_launch_func(int argc,char *argv[])
         //直接调整
     }else if (strcmp(argv[1], "set")==0)
     {
-        pitch = atof(argv[2]);
-        roll = atof(argv[3]);
-        speed = atof(argv[4]);
-        yaw = atof(argv[5]);
-        //直接调整
+		if(strcmp(argv[2], "pitch")==0)
+		{
+			pitch = atof(argv[3]);//0-100
+			pur_pitch = pitch;
+			pitch_flag = 1;
+		}else if(strcmp(argv[2], "roll")==0)
+		{
+			roll = atof(argv[3]);
+			pur_roll = roll;
+			roll_flag = 1;
+        }else if(strcmp(argv[2], "speed")==0)
+		{
+			speed = atof(argv[3]);
+			TIM_SetCompare1(TIM8,1000000/50*speed/100 - 1);
+		}else if(strcmp(argv[2], "speed")==0)
+		{
+			yaw = atof(argv[3]);
+        }else{
+		//直接调整
+			pitch = atof(argv[2]);
+			roll = atof(argv[3]);
+			speed = atof(argv[4]);
+			yaw = atof(argv[5]);
+			pur_pitch = pitch;
+			pitch_flag = 1;
+			pur_roll = roll;
+			roll_flag = 1;
+			TIM_SetCompare1(TIM8,1000000/50*speed/100 - 1);
+		}
+		
     }else if (strcmp(argv[1], "print")==0)
     {
         print_launch_list(now_pos->d[target].launch_ptr->link);

@@ -141,6 +141,7 @@ void gpio_config(void)
 //	GPIO_PinAFConfig(GPIOB,GPIO_PinSource6,GPIO_AF_SPI2); 
 //	GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_SPI2);
 //----------------------------SPI2---------------------------------------------------------------------------------------------
+	
 	GPIO_Configuration(GPIO_Pin_12 | GPIO_Pin_13,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOD);
 	GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_TIM4); 	
 	GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4); 
@@ -148,9 +149,15 @@ void gpio_config(void)
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_TIM3); 	
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_TIM3); 
 //----------------------------增量码盘---------------------------------------------------------------------------------------------
+	
 	GPIO_Configuration(GPIO_Pin_11,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOF);
 	GPIO_Configuration(GPIO_Pin_14,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOE);
 //----------------------------触碰开关---------------------------------------------------------------------------------------------
+	
+	GPIO_Configuration(GPIO_Pin_6, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM8);
+//----------------------------PWM---------------------------------------------------------------------------------------------
+	
 }
 
 /*

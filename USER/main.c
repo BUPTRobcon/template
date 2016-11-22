@@ -10,7 +10,11 @@ float d_pitch=0,dd_pitch=0,last_d_pitch=0;
 float now_pitch,pur_pitch;
 int pitch_cnt=0;
 
-int flag=0;
+float d_roll=0,dd_roll=0,last_d_roll=0;
+float now_roll,pur_roll;
+int roll_cnt=0;
+
+int pitch_flag=0,roll_flag=0;
 
 extern int TIM3_round,TIM4_round;
 typedef struct 
@@ -69,6 +73,14 @@ void pitch_move(float v){
 	USART_SendString(USART2,"3v%d\r",(int)v);
 }
 
+void roll_move(float v){
+	if (v - 1200.f > 0.0000000001)
+		v = 1200;
+	else if (v + 1200.f < 0.00000000001)
+		v=-1200;
+	USART_SendString(USART2,"2v%d\r",(int)v);
+}
+
 
 
 //-----------------²Ý¸å½áÊø------------------------
@@ -93,14 +105,14 @@ int main(void)
 //	can_add_callback();
     while(1) 
 	{
-		if (flag==1){
+		if (pitch_flag==1){
 			now_pitch = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
 			d_pitch = pur_pitch - now_pitch;
 			dd_pitch = d_pitch - last_d_pitch;
 			last_d_pitch = d_pitch;
 			if (fabs(d_pitch)<0.01){
 				if (pitch_cnt > 10){
-					flag=0;
+					pitch_flag=0;
 					pitch_move(0);
 				}else{
 					pitch_cnt++;
@@ -111,10 +123,28 @@ int main(void)
 				pitch_move(d_pitch * 300 + dd_pitch * 240);
 			}
 		}
+		if (roll_flag==1){
+			now_roll = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
+			d_roll = pur_roll - now_roll;
+			dd_roll = d_roll - last_d_roll;
+			last_d_roll = d_roll;
+			if (fabs(d_roll)<0.01){
+				if (roll_cnt > 10){
+					roll_flag=0;
+					roll_move(0);
+				}else{
+					roll_cnt++;
+					roll_move(d_roll * 300 + dd_roll * 240);
+				}
+			}else{
+				roll_cnt=0;
+				roll_move(d_roll * 300 + dd_roll * 240);
+			}
+		}
 		controller_check();
-//		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
-//			TIM3_display=TIM3_round*30000-TIM3->CNT;
-//			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
+		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
+			TIM3_display=TIM3_round*30000-TIM3->CNT;
+			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
 		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
 			TIM4_display=TIM4_round*30000-TIM4->CNT;
 			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		

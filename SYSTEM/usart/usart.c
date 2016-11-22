@@ -1,6 +1,6 @@
 #include "usart.h"	
 
-extern float pur_pitch;
+
 
 //初始化IO 串口1 
 //bound:波特率
@@ -35,16 +35,18 @@ void uart_init(u32 bound){
 
 void UART5_IRQHandler(void)                	//串口5中断服务程序
 {
-	u8 Res; extern int flag;
+	u8 Res; 
+	extern int pitch_flag,roll_flag;
+	extern float pur_pitch,pur_roll;
 	if(USART_GetITStatus(UART5, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)  
        // RXNE准备好读取接收到的数据 1<<5
 	{
 		Res =USART_ReceiveData(UART5);//(USART1->DR);	//读取接收到的数据   中断标志已清除
-		if (Res=='8') {pur_pitch=10.f;flag=1;}
-		else if(Res=='2') {pur_pitch=5.f;flag=1;}
+		if (Res=='8') {pur_pitch=10.f;pitch_flag=1;}
+		else if(Res=='2') {pur_pitch=5.f;pitch_flag=1;}
 //		else if(Res=='6') USART_SendString(USART2,"0v-200\r");
 //		else if(Res=='4') USART_SendString(USART2,"0v200\r");
-		else {USART_SendString(USART2,"0v0\r");USART_SendString(USART2,"3v0\r");flag=0;}
+		else {USART_SendString(USART2,"0v0\r");USART_SendString(USART2,"3v0\r");pitch_flag=0;}
 //		if((UART5_RX_STA&0x8000)==0)//接收未完成   0x8000=1<<15
 //		{
 //			if(UART5_RX_STA&0x4000)//接收到了0x0d  0x4000=1<<14

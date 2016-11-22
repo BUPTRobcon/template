@@ -2,6 +2,7 @@
 
 GPIO_InitTypeDef GPIO_InitStructure;
 NVIC_InitTypeDef NVIC_InitStructure;
+EXTI_InitTypeDef exti_init_structure;
 
 /*
  *函数名：void GPIO_Configuration(uint16_t GPIO_Pin,
@@ -89,6 +90,10 @@ int fputc(int ch, FILE *f)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB,ENABLE); //使能GPIOB时钟
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC,ENABLE); //使能GPIOC时钟
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD,ENABLE); //使能GPIOD时钟
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE,ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF,ENABLE);
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 	
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);//使能SPI1时钟
 	
@@ -136,6 +141,9 @@ void gpio_config(void)
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_TIM3); 	
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_TIM3); 
 //----------------------------增量码盘---------------------------------------------------------------------------------------------
+	GPIO_Configuration(GPIO_Pin_11,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOF);
+	GPIO_Configuration(GPIO_Pin_14,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOE);
+//----------------------------触碰开关---------------------------------------------------------------------------------------------
 }
 
 /*
@@ -155,7 +163,6 @@ void EXTI_Configuration(uint32_t EXTI_Line,
                 EXTITrigger_TypeDef EXTI_Trigger,
                 FunctionalState EXTI_LineCmd)
 {
-    EXTI_InitTypeDef exti_init_structure;
     exti_init_structure.EXTI_Line = EXTI_Line;
     exti_init_structure.EXTI_Mode = EXTI_Mode;
     exti_init_structure.EXTI_Trigger = EXTI_Trigger;
@@ -163,6 +170,15 @@ void EXTI_Configuration(uint32_t EXTI_Line,
     EXTI_Init(&exti_init_structure);
 }
 
+void EXTI_config()
+{
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOF, EXTI_PinSource11);
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource14);
+	EXTI_Configuration(EXTI_Line11,EXTI_Mode_Interrupt,EXTI_Trigger_Falling,ENABLE);
+	EXTI_Configuration(EXTI_Line14,EXTI_Mode_Interrupt,EXTI_Trigger_Falling,ENABLE);
+	EXTI_ClearITPendingBit(EXTI_Line11); 
+	EXTI_ClearITPendingBit(EXTI_Line14); 
+}
 
 void nvic_config()
 {
@@ -171,9 +187,11 @@ void nvic_config()
 	
 	NVIC_Configuration(UART5_IRQn,3,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
-	NVIC_Configuration(TIM2_IRQn,1,3,ENABLE);
-	NVIC_Configuration(TIM3_IRQn,1,0,ENABLE);
-	NVIC_Configuration(TIM4_IRQn,1,0,ENABLE);
+	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
+	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
+	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
+	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
+
 	
 //	NVIC_InitStructure.NVIC_IRQChannel=SPI1_IRQn;
 //    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;//1

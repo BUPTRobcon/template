@@ -4,6 +4,10 @@
 #include "TIM.h"
 #include "math.h"
 
+extern u8 cmd,sticks[4];
+extern u8 ptr;
+extern int wait_cnt;
+
 //--------------暂时用来草稿-------------
 
 float d_pitch=0,dd_pitch=0,last_d_pitch=0;
@@ -55,6 +59,10 @@ void TIM2_IRQHandler(void){
 	u8 i;
 	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
 		{
+			if (wait_cnt>-1)
+				if (++wait_cnt==50)
+				{	USART_SendString(UART5,"Good to go\n");
+					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
 			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
 			for (i=0;i<4;i++) 
 			 {
@@ -66,19 +74,19 @@ void TIM2_IRQHandler(void){
 		}	
 }
 void pitch_move(float v){
-	if (v - 1200.f > 0.0000000001)
+	if (v - 1200.f > 0.0000001)
 		v = 1200;
-	else if (v + 1200.f < 0.00000000001)
+	else if (v + 1200.f < 0.0000001)
 		v=-1200;
 	USART_SendString(USART2,"3v%d\r",(int)v);
 }
 
 void roll_move(float v){
-	if (v - 1200.f > 0.0000000001)
+	if (v - 1200.f > 0.0000001)
 		v = 1200;
-	else if (v + 1200.f < 0.00000000001)
+	else if (v + 1200.f < 0.0000001)
 		v=-1200;
-	USART_SendString(USART2,"2v%d\r",(int)v);
+	USART_SendString(USART2,"0v%d\r",(int)v);
 }
 
 
@@ -96,6 +104,7 @@ int main(void)
 	delay_init(168);  //初始化延时函数
 	rcc_config();
 	gpio_config();
+	EXTI_config();
 	nvic_config();
 	uart_init(115200);//初始化串口波特率为9600
 	TIM2_Init();

@@ -58,8 +58,6 @@ void TIM3_Init(){
 void TIM2_Init()        //0.005ms ¶¨Ê±
 {
 	/*TIM2*/
-	NVIC_InitTypeDef NVIC_InitStructure;
-	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	TIM_DeInit(TIM2);
 	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);

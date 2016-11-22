@@ -16,16 +16,17 @@
 
 
 #define STR_BUFFER_LEN 128
-
 #define USART_REC_LEN  			200 
 extern u8  UART5_RX_BUF[USART_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.末字节为换行符 
 extern u16 UART5_RX_STA;         		//接收状态标记	
 extern u8  USART3_RX_BUF[USART_REC_LEN];    
 extern u16 USART3_RX_STA;
 
+
 void uart_init(u32 bound);
 void rcc_config(void);
 void gpio_config(void);
+void EXTI_config(void);
 void nvic_config(void);
 void NVIC_Configuration(uint8_t NVIC_IRQChannel,uint8_t NVIC_IRQChannelPreemptionPriority,
 	uint8_t NVIC_IRQChannelSubPriority,FunctionalState NVIC_IRQChannelCmd);
@@ -37,8 +38,6 @@ void EXTI_Configuration(uint32_t EXTI_Line,
                 FunctionalState EXTI_LineCmd);
 
 void USART_SendString(USART_TypeDef* USARTx, char *fmt, ...);
-
-extern u8 cmd,sticks[4];
 
 
 

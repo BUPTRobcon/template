@@ -62,10 +62,10 @@ void TIM2_IRQHandler(void){
 		}	
 }
 void pitch_move(float v){
-	if (v - 600.f > 0.0000000001)
-		v = 600;
-	else if (v + 600.f < 0.00000000001)
-		v=-600;
+	if (v - 1200.f > 0.0000000001)
+		v = 1200;
+	else if (v + 1200.f < 0.00000000001)
+		v=-1200;
 	USART_SendString(USART2,"3v%d\r",(int)v);
 }
 

@@ -9,19 +9,19 @@
 #include "stm32f4xx_it.h"
 static cmd_struct cmd_tbl[] = {
     /*
-     * è‹¥éœ€æ·»åŠ å‘½ä»¤ï¼Œéœ€è¦åœ¨æ­¤åŠ ä¸Šï¼š
-     * CMD_ADD("å‘½ä»¤å","å‘½ä»¤ä½¿ç”¨æ–¹æ³•ï¼ˆå¯ä¸ºç©ºæ ¼,ä½†ä¸èƒ½ä¸åŠ åŒå¼•å·ï¼‰",å¯¹åº”å‘½ä»¤çš„æ‰§è¡Œå‡½æ•°å)
-     * æ³¨æ„æœ€åä¸€ä¸ªä¸éœ€è¦é€—å·ï¼Œå‰é¢çš„éƒ½éœ€è¦é€—å·
+     * ÈôĞèÌí¼ÓÃüÁî£¬ĞèÒªÔÚ´Ë¼ÓÉÏ£º
+     * CMD_ADD("ÃüÁîÃû","ÃüÁîÊ¹ÓÃ·½·¨£¨¿ÉÎª¿Õ¸ñ,µ«²»ÄÜ²»¼ÓË«ÒıºÅ£©",¶ÔÓ¦ÃüÁîµÄÖ´ĞĞº¯ÊıÃû)
+     * ×¢Òâ×îºóÒ»¸ö²»ĞèÒª¶ººÅ£¬Ç°ÃæµÄ¶¼ĞèÒª¶ººÅ
      */
-    CMD_ADD("help","Print all command and usage ",cmd_help_func),
-    CMD_ADD("reboot","é‡å¯ç¨‹åº ",cmd_reboot_func),
-   // CMD_ADD("sensor","æŸ¥çœ‹ä¼ æ„Ÿå™¨çŠ¶æ€ ",cmd_sensor_func),
-    CMD_ADD("switch","æŸ¥çœ‹è§¦ç¢°å¼€å…³çŠ¶æ€ ",cmd_switch_func),
+    CMD_ADD("help"," Print all command and usage ",cmd_help_func),
+    CMD_ADD("reboot"," ÖØÆô³ÌĞò ",cmd_reboot_func),
+   // CMD_ADD("sensor","²é¿´´«¸ĞÆ÷×´Ì¬ ",cmd_sensor_func),
+    CMD_ADD("switch"," ²é¿´´¥Åö¿ª¹Ø×´Ì¬ ",cmd_switch_func),
     CMD_ADD("hello"," ",cmd_hello_func),
-    CMD_ADD("speed","è®¾ç½®åº•ç›˜è¿åŠ¨é€Ÿåº¦ ",cmd_speed_func),
-    CMD_ADD("launch","è®¾ç½®å‘å°„å‚æ•° ",cmd_launch_func),
-    CMD_ADD("pos","è®¾ç½®å…¨åœºå®šä½çš„åæ ‡ ",cmd_pos_func),
-    CMD_ADD("action","ä½¿ç”¨å‘½ä»¤æ‰§è¡Œå„ç§åŠ¨ä½œ ",cmd_action_func),
+    CMD_ADD("speed"," ÉèÖÃµ×ÅÌÔË¶¯ËÙ¶È ",cmd_speed_func),
+    CMD_ADD("launch"," ÉèÖÃ·¢Éä²ÎÊı ",cmd_launch_func),
+    CMD_ADD("pos"," ÉèÖÃÈ«³¡¶¨Î»µÄ×ø±ê ",cmd_pos_func),
+    CMD_ADD("action"," Ê¹ÓÃÃüÁîÖ´ĞĞ¸÷ÖÖ¶¯×÷ ",cmd_action_func),
     CMD_ADD("stop"," ",cmd_stop_func),
 };
 
@@ -35,7 +35,7 @@ void cmd_init(void){
     NVIC_InitTypeDef nvic_init_stru;
 #if CMD_USARTn == 1
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);	
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);   
     GPIO_Configuration(GPIO_Pin_9,GPIO_Mode_AF, GPIO_Speed_50MHz,GPIO_OType_PP,GPIO_PuPd_NOPULL,GPIOA);   //USART1 TX
     GPIO_Configuration(GPIO_Pin_10,GPIO_Mode_AF, GPIO_Speed_50MHz,GPIO_OType_PP,GPIO_PuPd_NOPULL,GPIOA); //USART1 RX
     GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);   
@@ -67,19 +67,19 @@ void cmd_init(void){
     GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5); 
     nvic_init_stru.NVIC_IRQChannel = UART5_IRQn;
 #endif
-    usart_init_stru.USART_BaudRate = CMD_USART_BAUD; 	   //è®¾ç½®æ³¢ç‰¹ç‡
-	usart_init_stru.USART_WordLength = USART_WordLength_8b;    //ä¸€ä¸ªå¸§ä¸­ä¼ è¾“çš„æ•°æ®ä½æ•°ï¼ˆå­—é•¿ä¸º8ä½æ•°æ®æ ¼å¼ï¼‰
-	usart_init_stru.USART_StopBits = USART_StopBits_1; 	   //ä¸€ä¸ªåœæ­¢ä½
-	usart_init_stru.USART_Parity = USART_Parity_No; 	//æ— å¥‡å¶æ ¡éªŒ
-	usart_init_stru.USART_HardwareFlowControl = USART_HardwareFlowControl_None;  //æ— ç¡¬ä»¶æ•°æ®æµæ§åˆ¶
-	usart_init_stru.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;  //å‘é€å’Œæ¥å—æ¨¡å¼
-	USART_Init(CMD_USARTx, &usart_init_stru);	 //åˆå§‹åŒ–ä¸²å£	
-	USART_Cmd(CMD_USARTx, ENABLE);	  //ä½¿èƒ½ä¸²å£
-	USART_ITConfig(CMD_USARTx,USART_IT_RXNE, ENABLE);
+    usart_init_stru.USART_BaudRate = CMD_USART_BAUD;       //ÉèÖÃ²¨ÌØÂÊ
+    usart_init_stru.USART_WordLength = USART_WordLength_8b;    //Ò»¸öÖ¡ÖĞ´«ÊäµÄÊı¾İÎ»Êı£¨×Ö³¤Îª8Î»Êı¾İ¸ñÊ½£©
+    usart_init_stru.USART_StopBits = USART_StopBits_1;     //Ò»¸öÍ£Ö¹Î»
+    usart_init_stru.USART_Parity = USART_Parity_No;     //ÎŞÆæÅ¼Ğ£Ñé
+    usart_init_stru.USART_HardwareFlowControl = USART_HardwareFlowControl_None;  //ÎŞÓ²¼şÊı¾İÁ÷¿ØÖÆ
+    usart_init_stru.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;  //·¢ËÍºÍ½ÓÊÜÄ£Ê½
+    USART_Init(CMD_USARTx, &usart_init_stru);    //³õÊ¼»¯´®¿Ú    
+    USART_Cmd(CMD_USARTx, ENABLE);    //Ê¹ÄÜ´®¿Ú
+    USART_ITConfig(CMD_USARTx,USART_IT_RXNE, ENABLE);
     NVIC_PriorityGroupConfig(CMD_NVIC_GROUP);
     nvic_init_stru.NVIC_IRQChannelPreemptionPriority = CMD_NVIC_IRQPP;
     nvic_init_stru.NVIC_IRQChannelSubPriority = CMD_NVIC_IRQSP;
-    nvic_init_stru.NVIC_IRQChannelCmd = ENABLE;	
+    nvic_init_stru.NVIC_IRQChannelCmd = ENABLE; 
     NVIC_Init(&nvic_init_stru);
 #endif
     for(i = 0;i < MAX_ARGC;i++){
@@ -96,12 +96,12 @@ int cmd_parse(char *cmd_line,int *argc,char *argv[]){
     c_temp = cmd_line[i++];  
     while(c_temp != '\r'){
         if(c_temp == ' '){
-            if(arg_index == 0){   //å¦‚æœå‘½ä»¤æˆ–è€…å‚æ•°å­—ç¬¦ä¸²ç¬¬ä¸€ä¸ªæ˜¯ç©ºæ ¼ï¼Œåˆ™å¿½ç•¥   
+            if(arg_index == 0){   //Èç¹ûÃüÁî»òÕß²ÎÊı×Ö·û´®µÚÒ»¸öÊÇ¿Õ¸ñ£¬ÔòºöÂÔ   
                 c_temp = cmd_line[i++];
                 continue;
             }
-            //ç©ºæ ¼ä¸ºå‚æ•°æˆ–è€…å‘½ä»¤çš„åˆ†éš”ç¬¦
-            if(arg_cnt == MAX_ARGC){   //å¦‚æœå‚æ•°ä¸ªæ•°è¿‡å¤š,åˆ™è¿”å›
+            //¿Õ¸ñÎª²ÎÊı»òÕßÃüÁîµÄ·Ö¸ô·û
+            if(arg_cnt == MAX_ARGC){   //Èç¹û²ÎÊı¸öÊı¹ı¶à,Ôò·µ»Ø
                 return -1;
             }
             argv[arg_cnt][arg_index] = 0;
@@ -110,16 +110,16 @@ int cmd_parse(char *cmd_line,int *argc,char *argv[]){
             c_temp = cmd_line[i++];
             continue;
         }
-        if(arg_index == MAX_CMD_ARG_LENGTH){   //å¦‚æœå‚æ•°é•¿åº¦è¿‡é•¿ï¼Œåˆ™æŠ¥é”™è¿”å›
+        if(arg_index == MAX_CMD_ARG_LENGTH){   //Èç¹û²ÎÊı³¤¶È¹ı³¤£¬Ôò±¨´í·µ»Ø
             return -2;
         }
         argv[arg_cnt][arg_index++] = c_temp;
         c_temp = cmd_line[i++];
     }
-    if(arg_cnt == 0 && arg_index == 0){  //å¦‚æœå‘½ä»¤æˆ–è€…å‚æ•°æ˜¯ç©ºçš„ï¼Œåˆ™è¿”å›
+    if(arg_cnt == 0 && arg_index == 0){  //Èç¹ûÃüÁî»òÕß²ÎÊıÊÇ¿ÕµÄ£¬Ôò·µ»Ø
         return -3;
     }
-    //æœ€åä¸€ä¸ªå‚æ•°çš„ç»“æŸæ²¡æœ‰åœ¨ä¸Šé¢çš„whileå¾ªç¯ä¸­è§£æåˆ°
+    //×îºóÒ»¸ö²ÎÊıµÄ½áÊøÃ»ÓĞÔÚÉÏÃæµÄwhileÑ­»·ÖĞ½âÎöµ½
     argv[arg_cnt++][arg_index] = 0;
     *argc = arg_cnt;
     return 0;
@@ -131,11 +131,11 @@ int cmd_exec(int argc,char *argv[]){
  
     cmd_num = sizeof(cmd_tbl)/sizeof(cmd_tbl[0]);
 
-    if(argc == 0){  //å¦‚æœå‚æ•°æ˜¯ç©ºçš„ï¼Œåˆ™è¿”å›
+    if(argc == 0){  //Èç¹û²ÎÊıÊÇ¿ÕµÄ£¬Ôò·µ»Ø
         return -1;
     }
-    for(cmd_index = 0;cmd_index < cmd_num;cmd_index++){   //æŸ¥æ‰¾å‘½ä»¤
-        if(strcmp((char *)(cmd_tbl[cmd_index].cmd_name),(char *)argv[0]) == 0){  //å¦‚æœæ‰¾åˆ°äº†å‘½ä»¤ï¼Œåˆ™æ‰§è¡Œå‘½ä»¤ç›¸å¯¹åº”çš„å‡½æ•°
+    for(cmd_index = 0;cmd_index < cmd_num;cmd_index++){   //²éÕÒÃüÁî
+        if(strcmp((char *)(cmd_tbl[cmd_index].cmd_name),(char *)argv[0]) == 0){  //Èç¹ûÕÒµ½ÁËÃüÁî£¬ÔòÖ´ĞĞÃüÁîÏà¶ÔÓ¦µÄº¯Êı
             cmd_tbl[cmd_index].cmd_func(argc,argv);
             return 0;
         }
@@ -160,33 +160,32 @@ void UART5_IRQHandler(void){
 
     if(USART_GetITStatus(CMD_USARTx,USART_IT_RXNE) != RESET){      
         USART_ClearITPendingBit(CMD_USARTx,USART_IT_RXNE);
-        c_recv = USART_ReceiveData(CMD_USARTx);			  
-        if(c_recv == '\r'){  //æ¥å—å®Œä¸€æ¬¡æŒ‡ä»¤
+        c_recv = USART_ReceiveData(CMD_USARTx);           
+        if(c_recv == '\n'){  //½ÓÊÜÍêÒ»´ÎÖ¸Áî
             if(cmd_line_length == 0){
                 return;
             }
-            cmd_line[cmd_line_length++] = (char)c_recv;
-            erro_n = cmd_parse(cmd_line,&cmd_argc,cmd_argv);  //è§£æå‘½ä»¤
+            erro_n = cmd_parse(cmd_line,&cmd_argc,cmd_argv);  //½âÎöÃüÁî
             if(erro_n < 0){
-                //æ‰“å°å‡½æ•°æ‰§è¡Œé”™è¯¯ä¿¡æ¯
+                //´òÓ¡º¯ÊıÖ´ĞĞ´íÎóĞÅÏ¢
                 if(erro_n == -3){
                 cmd_line_length = 0;
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
                 return;
                 }else if(erro_n == -2){
-                    USART_SendString(CMD_USARTx,"å‘½ä»¤å‚æ•°é•¿åº¦è¿‡é•¿\n");
+                    USART_SendString(CMD_USARTx,"msg: ÃüÁî²ÎÊı³¤¶È¹ı³¤\n");
                 }else if(erro_n == -1){
-                    USART_SendString(CMD_USARTx,"å‘½ä»¤å‚æ•°è¿‡å¤š\n");
+                    USART_SendString(CMD_USARTx,"msg: ÃüÁî²ÎÊı¹ı¶à\n");
                 }
                 cmd_line_length = 0;
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
                 return;
             }
-            erro_n = cmd_exec(cmd_argc,cmd_argv);   //æ‰§è¡Œå‘½ä»¤
+            erro_n = cmd_exec(cmd_argc,cmd_argv);   //Ö´ĞĞÃüÁî
             if(erro_n < 0){
-                //æ‰“å°å‡½æ•°æ‰§è¡Œé”™è¯¯ä¿¡æ¯
+                //´òÓ¡º¯ÊıÖ´ĞĞ´íÎóĞÅÏ¢
                 if(erro_n == -2){
-                  	  USART_SendString(CMD_USARTx,"æœªæ‰¾åˆ°å‘½ä»¤:%s\r\n",cmd_argv[0]);
+                      USART_SendString(CMD_USARTx,"msg: Î´ÕÒµ½ÃüÁî:%s\r\n",cmd_argv[0]);
                 }
                 cmd_line_length = 0;
                 memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
@@ -196,12 +195,12 @@ void UART5_IRQHandler(void){
             memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
         }else{
             if(cmd_line_length == MAX_CMD_LINE_LENGTH){
-                //æ‰“å°å‘½ä»¤è¡Œå¤ªé•¿çš„ä¿¡æ¯
+                //´òÓ¡ÃüÁîĞĞÌ«³¤µÄĞÅÏ¢
                 cmd_line_length = 0;
                 return;
             }
             cmd_line[cmd_line_length++] = (char)c_recv;
-        }			
+        }           
     }
 }
 
@@ -210,10 +209,10 @@ void cmd_help_func(int argc,char *argv[]){
     u32 cmd_num;
     cmd_num = sizeof(cmd_tbl)/sizeof(cmd_tbl[0]);
     if(argc > 1){
-        USART_SendString(CMD_USARTx,"helpå‘½ä»¤å‚æ•°è¿‡å¤š\n");		
-        return;			
+        USART_SendString(CMD_USARTx,"msg: helpÃüÁî²ÎÊı¹ı¶à\n");        
+        return;         
     }
     for(i = 0;i < cmd_num;i++){  
-        USART_SendString(CMD_USARTx,"cmd:%s   usage:%s\n",cmd_tbl[i].cmd_name,cmd_tbl[i].cmd_usage);
+        USART_SendString(CMD_USARTx,"msg: cmd:%s   usage:%s\n",cmd_tbl[i].cmd_name,cmd_tbl[i].cmd_usage);
     }
 }

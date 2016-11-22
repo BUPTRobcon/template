@@ -1,10 +1,11 @@
 #include "spi.h"
+#include "cmd.h"
 #include "global.h"
+#include "param.h"
 #include "can.h"
 
 //全局变量定义区
 bool g_stop_flag;
-u8 target;
 float g_vega_x;
 float g_vega_y;
 
@@ -67,8 +68,13 @@ int main(void)
 	//AHB 168MHZ  APB2 84MHZ  APB1 42MHZ
 	
 	delay_init(168);  //初始化延时函数
-	uart_init(115200);//初始化串口波特率为9600
+	rcc_config();
+	gpio_config();
+	uart_init(115200);//初始化串口波特率为115200
 	SPI2_Init();
+	nvic_config();
+	cmd_init();
+	param_init();
 //	can_add_callback();
     while(1) 
 	{

@@ -56,7 +56,7 @@ u8 STMFLASH_ReadByte_Inc(u32* faddr)
   */
 float STMFLASH_ReadFloat_Inc(u32* faddr)
 {
-    float temp = *(vu32*)(* faddr);
+    float temp = *(float*)(* faddr);
     *faddr += sizeof(float);
     return temp;
 }

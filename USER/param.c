@@ -33,9 +33,10 @@ int param_init(void)
 		pos_data->y = STMFLASH_ReadFloat_Inc(&addr);
 		for (j = 0; j < 7; ++j)
 		{
-			pos_data->d[i].launch_num = STMFLASH_ReadWord_Inc(&addr);
+			pos_data->d[j].launch_num = STMFLASH_ReadWord_Inc(&addr);
+			list_init(&pos_data->d[j].launch_ptr);
 			if(pos_data == NULL) return 0;
-			for (k = 0; k < pos_data->d[i].launch_num; ++k)
+			for (k = 0; k < pos_data->d[j].launch_num; ++k)
 			{
 				launch_data = (Launch_data *) malloc(sizeof(Launch_data));
 				launch_data->pitch = STMFLASH_ReadFloat_Inc(&addr);
@@ -43,12 +44,12 @@ int param_init(void)
 				launch_data->speed = STMFLASH_ReadFloat_Inc(&addr);
 				launch_data->yaw = STMFLASH_ReadFloat_Inc(&addr);
 				
-				if(!list_insert(&pos_data->d[i].launch_ptr, k+1, launch_data))
+				if(!list_insert(&pos_data->d[j].launch_ptr, k+1, launch_data))
 					return 0;
 			}
 		}
 
-		if(list_insert(&param->pos_ptr, i+1, pos_data))
+		if(list_insert(&param->pos_ptr, i+1, pos_data) == 0)
 			return 0;
 	}
 #endif
@@ -88,7 +89,7 @@ int param_save(void)
 	
 	while(pos_ptr!=NULL)
 	{
-		pos_data = pos_ptr->data;
+		pos_data = (Pos_data *)pos_ptr->data;
 
 		FLASH_ProgramFloat(addr, pos_data->x);
 		addr+=4;
@@ -99,11 +100,12 @@ int param_save(void)
 		{
 			pos_data->d[i].launch_num = list_get_length(&(pos_data->d[i].launch_ptr));
 			FLASH_ProgramWord(addr, pos_data->d[i].launch_num);
+			addr+=4;
 			launch_ptr = pos_data->d[i].launch_ptr->link;
 
 			while(launch_ptr != NULL)
 			{
-				launch_data = launch_ptr->data;
+				launch_data = (Launch_data *)launch_ptr->data;
 
 				FLASH_ProgramFloat(addr, launch_data->pitch);
 				addr+=4;
@@ -178,7 +180,7 @@ bool cmp_launch(void *a,void *b){
   */
 void print_pos(void *a){
 	Pos_data* p=(Pos_data*)a;
-	USART_SendString(bluetooth,"x:%.2f y:%.2f\n",p->x,p->y);
+	USART_SendString(bluetooth,"x:%.3f y:%.3f\n",p->x,p->y);
 }
 
 /**
@@ -192,7 +194,7 @@ void print_pos(void *a){
   */
 void print_launch(void *a){
 	Launch_data* p=(Launch_data*)a;
-	USART_SendString(bluetooth,"pitch:%.2f roll:%.2f yaw:%.2f speed:%.2f\n",p->pitch,p->roll,p->yaw,p->speed);
+	USART_SendString(bluetooth,"pitch:%.3f roll:%.3f speed:%.3f yaw:%.3f\n",p->pitch,p->roll,p->speed,p->yaw);
 }
 
 /**
@@ -205,8 +207,11 @@ void print_launch(void *a){
   * @retval void
   */
 void print_launch_list(link_list p){
+	int k = 1;
 	while (p!=NULL){
+		USART_SendString(UART5,"l:%d ", k);
 		print_launch(p->data);
+		k++;
 		p=p->link;
 	}
 }
@@ -221,7 +226,9 @@ void print_launch_list(link_list p){
   * @retval void
   */
 void print_pos_list(link_list p){
+	int k = 1;
 	while (p!=NULL){
+		USART_SendString(UART5,"p:%d ", k++);
 		print_pos(p->data);
 		p=p->link;
 	}
@@ -261,7 +268,6 @@ void clear_launch(link_list * first)
 		launch = launch->link;
 	}
 	list_clear(first);
-	free(first);
 }
 
 void clear_pos(link_list * first)
@@ -275,12 +281,12 @@ void clear_pos(link_list * first)
 		for (i = 0; i < 7; ++i)
 		{
 			clear_launch(&data->d[i].launch_ptr);
+			free(data->d[i].launch_ptr);
 		}
 		free(data);
 		pos = pos->link;
 	}
 	list_clear(first);
-	free(first);
 }
 
 Pos_data * local_pos(int no)

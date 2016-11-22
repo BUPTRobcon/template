@@ -8,11 +8,11 @@
 
 extern Param * param;
 extern bool g_stop_flag;
-extern u8 target;       //ÁõÆÊ†á0-6
+u8 target=1;       //ƒø±Í0-6
 extern float g_vega_x;
 extern float g_vega_y;
 static list_node * now_pos_ptr;
-static Pos_data * now_pos;     //ÂΩìÂâçÁÇπÁöÑÊï∞ÊçÆÊåáÈíà
+static Pos_data * now_pos;     //µ±«∞µ„µƒ ˝æ›÷∏’Î
 static float motor_v;
 
 void cmd_reboot_func(int argc,char *argv[]){
@@ -28,7 +28,7 @@ void cmd_stop_func(int argc,char *argv[]){
 }
 
 void cmd_hello_func(int argc,char *argv[]){
-    USART_SendString(CMD_USARTx, "Hello World");
+    USART_SendString(CMD_USARTx, "msg: Hello World\n");
 }
 
 void cmd_pos_func(int argc,char *argv[])
@@ -41,14 +41,14 @@ void cmd_pos_func(int argc,char *argv[])
     list_node * ptr;
     int start_no,end_no;
     int erro_no;
-    if (strcmp(argv[1], "now"))
+    if (strcmp(argv[1], "now") == 0)
     {
-        USART_SendString(CMD_USARTx, "x:%f,y:%f", g_vega_x,g_vega_y);
+        USART_SendString(CMD_USARTx, "x:%f y:%f\n", g_vega_x,g_vega_y);
     }else
     if(strcmp(argv[1],"add") == 0){
         if(argc < 5){
-            USART_SendString(CMD_USARTx,"Error!please enter:\n");
-            USART_SendString(CMD_USARTx,"   pos add <no> <x> <y>\n");
+            USART_SendString(CMD_USARTx,"msg: Error!please enter:\n");
+            USART_SendString(CMD_USARTx,"msg:    pos add <no> <x> <y>\n");
         }
         no = atoi(argv[2]);
         pos_x = atof(argv[3]);
@@ -62,11 +62,15 @@ void cmd_pos_func(int argc,char *argv[])
             list_init(&data->d[i].launch_ptr);
         }
         if((erro_no = list_insert(&param->pos_ptr, no, data)) <= 0){
-            USART_SendString(CMD_USARTx,"Error:%d\n",erro_no);
-        }
-        print_pos_list(param->pos_ptr);
+            USART_SendString(CMD_USARTx,"msg: Error:%d\n",erro_no);
+        }else{
+			param->pos_num++;
+			now_pos_ptr = list_locate(&param->pos_ptr,no);
+			now_pos = now_pos_ptr->data;
+		}
+		print_pos_list(param->pos_ptr->link);
     }else if(strcmp(argv[1],"print") == 0){
-        print_pos_list(param->pos_ptr);
+        print_pos_list(param->pos_ptr->link);
     }else if(strcmp(argv[1],"del") == 0){
         no = atoi(argv[2]);
         ptr = list_locate(&param->pos_ptr, no);
@@ -80,24 +84,25 @@ void cmd_pos_func(int argc,char *argv[])
             free(data);
             list_remove_num(&param->pos_ptr,no);
             param->pos_num-=1;
+			USART_SendString(CMD_USARTx,"msg: del success\n");
         }
-        print_pos_list(param->pos_ptr);
+        print_pos_list(param->pos_ptr->link);
     }else if(strcmp(argv[1],"clear") == 0){
         clear_pos(&param->pos_ptr);
         param->pos_num = 0;
     }else if(strcmp(argv[1],"save") == 0){
         erro_no = param_save();
         if(erro_no < 0){
-            USART_SendString(CMD_USARTx,"Save error:%d\n",erro_no);
+            USART_SendString(CMD_USARTx,"msg: Save error:%d\n",erro_no);
         }
     }else if(strcmp(argv[1],"modi") == 0){
         no = atoi(argv[2]);
         if((data = local_pos(no)) == NULL){
-            USART_SendString(CMD_USARTx,"Not found point No:%d\n",no);
+            USART_SendString(CMD_USARTx,"msg: Not found point No:%d\n",no);
             return;
         }
         if(argc < 5){
-            USART_SendString(CMD_USARTx,"Error cmd format\n");
+            USART_SendString(CMD_USARTx,"msg: Error cmd format\n");
             return;
         }
         pos_x = atof(argv[3]);
@@ -105,19 +110,22 @@ void cmd_pos_func(int argc,char *argv[])
 
         data->x = pos_x;
         data->y = pos_y;
-        print_pos_list(param->pos_ptr);
-    }else if (strcmp(argv[1], "jmp"))
+        print_pos_list(param->pos_ptr->link);
+    }else if (strcmp(argv[1], "jmp")==0)
     {
         no = atoi(argv[2]);
         no0 = atoi(argv[3]);
         ptr = list_locate(&param->pos_ptr, no);
         if (ptr != NULL)
         {
-            node_move(&param->pos_ptr, no0, ptr);
+            if((node_move(&param->pos_ptr, no0, ptr)) == 0)
+				USART_SendString(CMD_USARTx, "msg: Error\n");
+			else
+				USART_SendString(CMD_USARTx, "msg: jmp success\n");
         }else{
-            USART_SendString(CMD_USARTx, "Error\n");
+            USART_SendString(CMD_USARTx, "msg: Error\n");
         }
-        print_pos_list(param->pos_ptr);
+        print_pos_list(param->pos_ptr->link);
     }
 }
 
@@ -131,22 +139,23 @@ void cmd_action_func(int argc,char *argv[])
     {
         now_pos_ptr = now_pos_ptr->link;
         now_pos = now_pos_ptr->data;
-        //Ë∑ëÂà∞‰∏ã‰∏Ä‰∏™ÁÇπ
+        //≈‹µΩœ¬“ª∏ˆµ„
     }else if (argc == 2){
         no = atoi(argv[1]);
         ptr = list_locate(&param->pos_ptr, no);
         now_pos = ptr->data;
         now_pos_ptr = ptr;
-        //Ë∑ëÂà∞ÊåáÂÆöÁöÑÁÇπÂéª
-    }else if (argc == 3){
+        //≈‹µΩ÷∏∂®µƒµ„»•
+    }else if (argc == 4){
         x = atof(argv[1]);
         y = atof(argv[2]);
         v = atof(argv[3]);
-        //Ë∑ëÂà∞ÊåáÂÆöÁöÑ‰ΩçÁΩÆ
-    }else if (strcmp(argv[1],"rotate")){
+        //≈‹µΩ÷∏∂®µƒŒª÷√
+    }
+	if (strcmp(argv[1],"rotate")==0){
         v = atof(argv[2]);
         yaw = atof(argv[3]);
-        //ÊµãËØïÂ∫ïÁõòÁîµÊú∫ËΩ¨Âä®Âà∞‰∏ÄÂÆöËßíÂ∫¶
+        //≤‚ ‘µ◊≈ÃµÁª˙◊™∂ØµΩ“ª∂®Ω«∂»
     }
 }
 
@@ -155,39 +164,39 @@ void cmd_switch_func(int argc,char *argv[])
     u8 state1,state2;
     state1 = GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_11);
     state2 = GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_14);
-    USART_SendString(CMD_USARTx, "roll_switch:%dpitch_switch:%d", state1, state2);
+    USART_SendString(CMD_USARTx, "roll_switch:%d pitch_switch:%d", state1, state2);
 }
 
 void cmd_speed_func(int argc,char *argv[])
 {
     float v = atof(argv[1]);
-    //ËÆæÁΩÆ
+    //…Ë÷√
 }
 
 void cmd_launch_func(int argc,char *argv[])
 {
     int no, no0;
-	int erro_no;
+    int erro_no;
     float pitch, roll, speed, yaw;
     Launch_data * data;
     list_node * ptr;
     if (argc == 1)
     {
-        //Â¶ÇÊûúÊ≤°ÂºÄÊó†Âà∑ÔºåÈÇ£Â∞±ÂºÄÊó†Âà∑ÔºåËΩ¨‰∏ÄÂúàÊé®È£ûÁõò
-    }else if (strcmp(argv[1], "now"))
+        //»Áπ˚√ªø™ŒﬁÀ¢£¨ƒ«æÕø™ŒﬁÀ¢£¨◊™“ª»¶Õ∆∑…≈Ã
+    }else if (strcmp(argv[1], "now")==0)
     {
-        //ÂèëÂ∞ÑÂèÇÊï∞
+        //∑¢…‰≤Œ ˝
         //USART_SendString(CMD_USARTn, "", g_vega_x,g_vega_y);
-    }else if (strcmp(argv[1],"start"))
+    }else if (strcmp(argv[1],"start")==0)
     {
-        //Â¶ÇÊûúÊ≤°ÊúâÂºÄÊó†Âà∑ÔºåÈÇ£Â∞±ÂºÄÊó†Âà∑Ôºå‰∏ÄÁõ¥Êé®È£ûÁõò
-    }else if (strcmp(argv[1],"load"))
+        //»Áπ˚√ª”–ø™ŒﬁÀ¢£¨ƒ«æÕø™ŒﬁÀ¢£¨“ª÷±Õ∆∑…≈Ã
+    }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);
         ptr = list_locate(&now_pos->d[target].launch_ptr, no);
         if (ptr == NULL)
         {
-            USART_SendString(CMD_USARTx, "Error\n");
+            USART_SendString(CMD_USARTx, "msg: Error\n");
             return;
         }
         data = ptr->data;
@@ -195,22 +204,22 @@ void cmd_launch_func(int argc,char *argv[])
         roll = data->roll;
         speed = data->speed;
         yaw = data->yaw;
-        //Áõ¥Êé•Ë∞ÉÊï¥
-    }else if (strcmp(argv[1], "set"))
+        //÷±Ω”µ˜’˚
+    }else if (strcmp(argv[1], "set")==0)
     {
         pitch = atof(argv[2]);
         roll = atof(argv[3]);
         speed = atof(argv[4]);
         yaw = atof(argv[5]);
-        //Áõ¥Êé•Ë∞ÉÊï¥
-    }else if (strcmp(argv[1], "print"))
+        //÷±Ω”µ˜’˚
+    }else if (strcmp(argv[1], "print")==0)
     {
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }else if (strcmp(argv[1], "add"))
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if (strcmp(argv[1], "add")==0)
     {
         if(argc < 7){
-            USART_SendString(CMD_USARTx,"Error!please enter:\n");
-            USART_SendString(CMD_USARTx,"  launch add <no> <pitch> <roll> <speed> <yaw>\n");
+            USART_SendString(CMD_USARTx,"msg: Error!please enter:\n");
+            USART_SendString(CMD_USARTx,"msg:   launch add <no> <pitch> <roll> <speed> <yaw>\n");
             return;
         }
         no = atoi(argv[2]);
@@ -224,21 +233,22 @@ void cmd_launch_func(int argc,char *argv[])
         data->speed = speed;
         data->yaw = yaw;
         if((erro_no = list_insert(&now_pos->d[target].launch_ptr, no, data)) <= 0){
-            USART_SendString(CMD_USARTx,"Error:%d\n",erro_no);
-        }
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }else if (strcmp(argv[1], "modi"))
+            USART_SendString(CMD_USARTx,"msg: Error:%d\n",erro_no);
+        }else
+			now_pos->d[target].launch_num++;
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if (strcmp(argv[1], "modi")==0)
     {
         if(argc < 7){
-            USART_SendString(CMD_USARTx,"Error!please enter:\n");
-            USART_SendString(CMD_USARTx,"  launch add <no> <pitch> <roll> <speed> <yaw>\n");
+            USART_SendString(CMD_USARTx,"msg: Error!please enter:\n");
+            USART_SendString(CMD_USARTx,"msg:   launch add <no> <pitch> <roll> <speed> <yaw>\n");
             return;
         }
         no = atoi(argv[2]);
         ptr = list_locate(&now_pos->d[target].launch_ptr, no);
         if (ptr == NULL)
         {
-            USART_SendString(CMD_USARTx, "Error\n");
+            USART_SendString(CMD_USARTx, "msg: Error\n");
             return;
         }
         data = ptr->data;
@@ -246,8 +256,8 @@ void cmd_launch_func(int argc,char *argv[])
         data->roll = atof(argv[4]);
         data->speed = atof(argv[5]);
         data->yaw = atof(argv[6]);
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }else if (strcmp(argv[1], "jmp"))
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if (strcmp(argv[1], "jmp")==0)
     {
         no = atoi(argv[2]);
         no0 = atoi(argv[3]);
@@ -256,10 +266,10 @@ void cmd_launch_func(int argc,char *argv[])
         {
             node_move(&now_pos->d[target].launch_ptr, no0, ptr);
         }else{
-            USART_SendString(CMD_USARTx, "Error\n");
+            USART_SendString(CMD_USARTx, "msg: Error\n");
         }
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }else if (strcmp(argv[1], "del"))
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if (strcmp(argv[1], "del")==0)
     {
         no = atoi(argv[2]);
         ptr = list_locate(&now_pos->d[target].launch_ptr, no);
@@ -267,11 +277,12 @@ void cmd_launch_func(int argc,char *argv[])
         {
             data = ptr->data;
             free(data);
-            list_remove_num(&param->pos_ptr,no);
+            list_remove_num(&now_pos->d[target].launch_ptr,no);
             now_pos->d[target].launch_num-=1;
+			USART_SendString(CMD_USARTx,"msg: del success\n");
         }
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }else if (strcmp(argv[1], "pop"))
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if (strcmp(argv[1], "pop")==0)
     {
         ptr = list_locate(&now_pos->d[target].launch_ptr, now_pos->d[target].launch_num);
         if (ptr != NULL)
@@ -280,7 +291,21 @@ void cmd_launch_func(int argc,char *argv[])
             free(data);
             list_remove_num(&now_pos->d[target].launch_ptr, now_pos->d[target].launch_num);
             now_pos->d[target].launch_num-=1;
+			USART_SendString(CMD_USARTx,"msg: pop success\n");
         }
-        print_launch_list(now_pos->d[target].launch_ptr);
-    }
+        print_launch_list(now_pos->d[target].launch_ptr->link);
+    }else if(strcmp(argv[1],"clear") == 0)
+	{
+		clear_launch(&now_pos->d[target].launch_ptr);
+		now_pos->d[target].launch_num = 0;
+	}else if(strcmp(argv[1],"target") == 0)
+	{
+		if (argc == 2)
+			USART_SendString(CMD_USARTx,"target:%d\n",target);
+		else{
+			no = atoi(argv[2]);
+			target = no;
+			USART_SendString(CMD_USARTx,"target:%d\n",target);
+		}
+	}
 }

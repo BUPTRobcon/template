@@ -1,5 +1,7 @@
 #include "spi.h"
+#include "cmd.h"
 #include "global.h"
+#include "param.h"
 #include "can.h"
 #include "TIM.h"
 #include "math.h"
@@ -7,6 +9,11 @@
 extern u8 cmd,sticks[4];
 extern u8 ptr;
 extern int wait_cnt;
+
+//全局变量定义区
+bool g_stop_flag;
+float g_vega_x;
+float g_vega_y;
 
 //--------------暂时用来草稿-------------
 
@@ -106,11 +113,14 @@ int main(void)
 	gpio_config();
 	EXTI_config();
 	nvic_config();
-	uart_init(115200);//初始化串口波特率为9600
 	TIM2_Init();
 	TIM3_Init();
 	TIM4_Init();
 //	SPI2_Init();
+	uart_init(115200);//初始化串口波特率为115200
+	SPI2_Init();
+	cmd_init();
+	param_init();
 //	can_add_callback();
     while(1) 
 	{

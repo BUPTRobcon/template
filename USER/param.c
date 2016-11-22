@@ -2,15 +2,17 @@
 #include "flash.h"
 #include <stdlib.h>
 
+Param * param;//参数/
+
 /**
   * @brief  初始化参数结构体
   *
-  * @param  param: 参数指针  
+  * @param  param: 参数指针  此处作为全局变量而不包含
   *          
   * @retval int: 返回0，出错，程序直接退出
   *				返回1，初始化成功
   */
-int param_init(Param * param)
+int param_init(void)
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	int i, j, k;
@@ -31,9 +33,10 @@ int param_init(Param * param)
 		pos_data->y = STMFLASH_ReadFloat_Inc(&addr);
 		for (j = 0; j < 7; ++j)
 		{
-			pos_data->d[i].launch_num = STMFLASH_ReadWord_Inc(&addr);
+			pos_data->d[j].launch_num = STMFLASH_ReadWord_Inc(&addr);
+			list_init(&pos_data->d[j].launch_ptr);
 			if(pos_data == NULL) return 0;
-			for (k = 0; k < pos_data->d[i].launch_num; ++k)
+			for (k = 0; k < pos_data->d[j].launch_num; ++k)
 			{
 				launch_data = (Launch_data *) malloc(sizeof(Launch_data));
 				launch_data->pitch = STMFLASH_ReadFloat_Inc(&addr);
@@ -41,12 +44,12 @@ int param_init(Param * param)
 				launch_data->speed = STMFLASH_ReadFloat_Inc(&addr);
 				launch_data->yaw = STMFLASH_ReadFloat_Inc(&addr);
 				
-				if(!list_insert(&pos_data->d[i].launch_ptr, k+1, launch_data))
+				if(!list_insert(&pos_data->d[j].launch_ptr, k+1, launch_data))
 					return 0;
 			}
 		}
 
-		if(list_insert(&param->pos_ptr, i+1, pos_data))
+		if(list_insert(&param->pos_ptr, i+1, pos_data) == 0)
 			return 0;
 	}
 #endif
@@ -56,12 +59,12 @@ int param_init(Param * param)
 /**
   * @brief  初始化参数结构体
   *
-  * @param  param: 参数指针  
+  * @param  param: 参数指针 此处作为全局变量而不包含 
   *          
   * @retval int: 返回<0，出错，程序直接退出
   *				返回1，保存
   */
-int param_save(Param * param)
+int param_save(void)
 {
 	u32 addr = PARAM_FLASH_ADDR_START;
 	list_node * pos_ptr;
@@ -86,7 +89,7 @@ int param_save(Param * param)
 	
 	while(pos_ptr!=NULL)
 	{
-		pos_data = pos_ptr->data;
+		pos_data = (Pos_data *)pos_ptr->data;
 
 		FLASH_ProgramFloat(addr, pos_data->x);
 		addr+=4;
@@ -97,11 +100,12 @@ int param_save(Param * param)
 		{
 			pos_data->d[i].launch_num = list_get_length(&(pos_data->d[i].launch_ptr));
 			FLASH_ProgramWord(addr, pos_data->d[i].launch_num);
+			addr+=4;
 			launch_ptr = pos_data->d[i].launch_ptr->link;
 
 			while(launch_ptr != NULL)
 			{
-				launch_data = launch_ptr->data;
+				launch_data = (Launch_data *)launch_ptr->data;
 
 				FLASH_ProgramFloat(addr, launch_data->pitch);
 				addr+=4;
@@ -176,7 +180,7 @@ bool cmp_launch(void *a,void *b){
   */
 void print_pos(void *a){
 	Pos_data* p=(Pos_data*)a;
-	USART_SendString(bluetooth,"x:%.2f y:%.2f\n",p->x,p->y);
+	USART_SendString(bluetooth,"x:%.3f y:%.3f\n",p->x,p->y);
 }
 
 /**
@@ -190,7 +194,7 @@ void print_pos(void *a){
   */
 void print_launch(void *a){
 	Launch_data* p=(Launch_data*)a;
-	USART_SendString(bluetooth,"pitch:%.2f roll:%.2f yaw:%.2f speed:%.2f\n",p->pitch,p->roll,p->yaw,p->speed);
+	USART_SendString(bluetooth,"pitch:%.3f roll:%.3f speed:%.3f yaw:%.3f\n",p->pitch,p->roll,p->speed,p->yaw);
 }
 
 /**
@@ -203,8 +207,11 @@ void print_launch(void *a){
   * @retval void
   */
 void print_launch_list(link_list p){
+	int k = 1;
 	while (p!=NULL){
+		USART_SendString(UART5,"l:%d ", k);
 		print_launch(p->data);
+		k++;
 		p=p->link;
 	}
 }
@@ -219,7 +226,9 @@ void print_launch_list(link_list p){
   * @retval void
   */
 void print_pos_list(link_list p){
+	int k = 1;
 	while (p!=NULL){
+		USART_SendString(UART5,"p:%d ", k++);
 		print_pos(p->data);
 		p=p->link;
 	}
@@ -248,4 +257,46 @@ void print_all(Param *p){
 	}
 }
 
+void clear_launch(link_list * first)
+{
+	Launch_data * data;
+	list_node * launch = (*first)->link;
+	while(launch != NULL)
+	{
+		data = launch->data;
+		free(data);
+		launch = launch->link;
+	}
+	list_clear(first);
+}
 
+void clear_pos(link_list * first)
+{
+	list_node * pos = (*first)->link;
+	Pos_data *data;
+	int i;
+	while(pos!=NULL)
+	{
+		data = pos->data;
+		for (i = 0; i < 7; ++i)
+		{
+			clear_launch(&data->d[i].launch_ptr);
+			free(data->d[i].launch_ptr);
+		}
+		free(data);
+		pos = pos->link;
+	}
+	list_clear(first);
+}
+
+Pos_data * local_pos(int no)
+{
+	Pos_data * data;
+	list_node * ptr;
+	ptr = list_locate(&param->pos_ptr, no);
+	if (ptr == NULL)
+	{
+		return NULL;
+	}
+	return ptr->data;
+}

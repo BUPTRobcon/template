@@ -32,7 +32,7 @@ void uart_init(u32 bound){
 
 }
 
-
+/******uart5用于指令接收与解析，重新定义了中断服务函数
 void UART5_IRQHandler(void)                	//串口5中断服务程序
 {
 	u8 Res; 
@@ -66,7 +66,7 @@ void UART5_IRQHandler(void)                	//串口5中断服务程序
 //			}
 //		}   		 
      } 
-} 
+} */
 
 void USART3_IRQHandler(void)                	
 {

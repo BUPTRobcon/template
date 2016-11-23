@@ -20,7 +20,7 @@ void TIM4_Init(){
  
 	TIM_EncoderInterfaceConfig(TIM4,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
 	TIM_ICStructInit(&TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_ICFilter = 6;
+	TIM_ICInitStructure.TIM_ICFilter = 10;
 	TIM_ICInit(TIM4, &TIM_ICInitStructure);
 
 	TIM4->CNT=0;
@@ -78,8 +78,8 @@ void TIM8_Init()  //无刷PWM输出
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
 	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-	TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;  //    84M/84 =1M  1ms/count
-	TIM_TimeBaseStructure.TIM_Period = 1000000/50-1;  
+	TIM_TimeBaseStructure.TIM_Prescaler = 168 - 1;  //    84M/84 =1M  1us/count
+	TIM_TimeBaseStructure.TIM_Period = 20000 - 1;  
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
 	TIM_TimeBaseInit(TIM8, &TIM_TimeBaseStructure);
@@ -87,7 +87,7 @@ void TIM8_Init()  //无刷PWM输出
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //选择定时器模式:TIM脉冲宽度调制模式1
  	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable; //比较输出使能
 	TIM_OCInitStructure.TIM_OutputNState = TIM_OutputState_Disable;
-	TIM_OCInitStructure.TIM_Pulse = 7.7/100*10000/50;
+	TIM_OCInitStructure.TIM_Pulse = 7.0/100*1000000/50 - 1;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; //输出极性
 	TIM_OC1Init(TIM8, &TIM_OCInitStructure);  //根据T指定的参数初始化外设TIM8 OC1
     TIM_OC1PreloadConfig(TIM8, TIM_OCPreload_Enable);  //使能TIM3在CCR1上的预装载寄存器

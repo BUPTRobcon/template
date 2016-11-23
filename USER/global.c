@@ -86,7 +86,7 @@ int fputc(int ch, FILE *f)
  
  void rcc_config()
 {
-	RCC_DeInit();			//初始化为缺省值
+	//RCC_DeInit();			//初始化为缺省值
 	//SystemInit();//源自system_stm32f10x.c文件,只需要调用此函数,则可完成RCC的配置.
 	//RCC_GetClocksFreq(&RCC_ClockFreq);
 	

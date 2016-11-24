@@ -25,6 +25,8 @@ void uart_init(u32 bound){
     USART_Cmd(UART5, ENABLE);  //使能串口5
 	USART_Init(USART3, &USART_InitStructure); //初始化串口3
     USART_Cmd(USART3, ENABLE);  //使能串口3
+	USART_Init(UART4, &USART_InitStructure); //初始化串口4
+    USART_Cmd(UART4, ENABLE);  //使能串口4
 	//USART_ClearFlag(USART1, USART_FLAG_TC);  	TC发送完成  1<<6
 		
 	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);//开启相关中断

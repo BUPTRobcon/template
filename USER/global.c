@@ -105,6 +105,7 @@ int fputc(int ch, FILE *f)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5,ENABLE);	//使能USART5时钟	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4,ENABLE);	//使能USART4时钟	
 }
 
 void gpio_config(void)
@@ -133,6 +134,10 @@ void gpio_config(void)
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource8,GPIO_AF_USART3); //GPIOD8复用为USART3
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource9,GPIO_AF_USART3); //GPIOD9复用为USART3
 
+	GPIO_Configuration(GPIO_Pin_10 | GPIO_Pin_11,
+					   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
+	GPIO_PinAFConfig(GPIOC,GPIO_PinSource10,GPIO_AF_UART4); //GPIOC10复用为UART4
+	GPIO_PinAFConfig(GPIOC,GPIO_PinSource11,GPIO_AF_UART4); //GPIOC11复用为UART4
 
 //----------------------------USART---------------------------------------------------------------------------------------------	
 //	GPIO_Configuration(GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15,

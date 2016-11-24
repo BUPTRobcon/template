@@ -197,7 +197,14 @@ void cmd_launch_func(int argc,char *argv[])
 				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f);
     }else if (strcmp(argv[1],"start")==0)
     {
-        //如果没有开无刷，那就开无刷，一直推飞盘
+        USART_SendString(UART4,"\r1v100\r");
+    }else if (strcmp(argv[1],"stop")==0)
+    {
+		TIM_SetCompare1(TIM8,1000000/50*7.0/100 - 1);
+        USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);

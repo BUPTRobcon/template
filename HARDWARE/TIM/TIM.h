@@ -5,6 +5,6 @@
 void TIM3_Init();
 void TIM3_Init();
 void TIM4_Init();
-
+void TIM2_Configuration();
 #endif
 

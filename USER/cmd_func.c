@@ -205,6 +205,12 @@ void cmd_launch_func(int argc,char *argv[])
 		USART_SendString(UART4,"\rv0\r");
 		USART_SendString(UART4,"\rv0\r");
 		USART_SendString(UART4,"\rv0\r");
+    }else if (strcmp(argv[1],"pushstop")==0)
+    {
+        USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
+		USART_SendString(UART4,"\rv0\r");
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);

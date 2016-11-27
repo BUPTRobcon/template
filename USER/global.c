@@ -4,6 +4,12 @@ GPIO_InitTypeDef GPIO_InitStructure;
 NVIC_InitTypeDef NVIC_InitStructure;
 EXTI_InitTypeDef exti_init_structure;
 
+float direction_angle = 90;
+u8 Hand_flag = 0;
+int WANTSPEED = 400;
+u8 TURN_Flag = 0;
+u8 Turn_R_Flag = 0 ,Turn_L_Flag = 0;
+u8 OPEN_Hander = 1;
 /*
  *函数名：void GPIO_Configuration(uint16_t GPIO_Pin,
                         GPIOMode_TypeDef  GPIO_Mode,
@@ -83,29 +89,64 @@ int fputc(int ch, FILE *f)
 }
 #endif
 
+void system_clk_set(void){ 
+    ErrorStatus HSEStartUpStatus;
+    RCC_DeInit();
  
- void rcc_config()
-{
+    RCC_HSEConfig(RCC_HSE_ON );   //打开外部时钟
+ 
+    HSEStartUpStatus = RCC_WaitForHSEStartUp();  //等待外部时钟打开至稳定
+ 
+  if(HSEStartUpStatus == SUCCESS)     
+  {
+    FLASH_SetLatency(FLASH_Latency_5);   
+    FLASH_PrefetchBufferCmd(ENABLE);       //flash时钟的相关配置  
+    RCC_PLLCmd(DISABLE);  //配置PLL之前需要关闭PLL
+    RCC_HCLKConfig(RCC_SYSCLK_Div1);   //HCLK分频
+    RCC_PCLK2Config(RCC_HCLK_Div1);   //PCLK2分频
+    RCC_PCLK1Config(RCC_HCLK_Div4);    //PCLK1分频
+    RCC_PLLConfig(RCC_PLLSource_HSE, 8, 336, 2, 7);    //sysclk = 168MHZ  ,,计算公式参见数据手册
+    RCC_PLLCmd(ENABLE); //使能PLL
+ 
+    while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET){      //等待，，直到PLL使能完毕
+    
+    }
+ 
+    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);  //选择PLL时钟为系统时钟
+ 
+    while(RCC_GetSYSCLKSource() != 0x08)       //等待，至PLL时钟设置成系统时钟完毕
+       { 
+       }
+     }
+    #if(__FPU_PRESENT == 1)&&(__FPU_USED == 1)
+			SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  //开启FPU
+		#endif
+
+}
+ 
+ void rcc_config(){
 	//RCC_DeInit();			//初始化为缺省值
-	//SystemInit();//源自system_stm32f10x.c文件,只需要调用此函数,则可完成RCC的配置.
+	
+	//system_clk_set();
 	//RCC_GetClocksFreq(&RCC_ClockFreq);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+                                                            //配置事件控制寄存器/外部中断控制寄存器/重映射时必须开启AFIO时钟，而开管脚的默认外设功能并不需要开AFIO时钟（没有重映射）
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);	 //使能USART1时钟
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE); 
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3,ENABLE);	//使能USART3时钟
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4,ENABLE);	//使能USART3时钟
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5,ENABLE);   //使能UART5时钟
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);   //使能syscfg时钟，用于外部中断
 	
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);//使能GPIOA时钟
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB,ENABLE); //使能GPIOB时钟
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC,ENABLE); //使能GPIOC时钟
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD,ENABLE); //使能GPIOD时钟
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE,ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF,ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); 
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); 
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);//使能SPI1时钟
-	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);	//使能USART1时钟
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3,ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5,ENABLE);	//使能USART5时钟	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4,ENABLE);	//使能USART4时钟	
 }
 
 void gpio_config(void)
@@ -133,12 +174,12 @@ void gpio_config(void)
 					   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOD);
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource8,GPIO_AF_USART3); //GPIOD8复用为USART3
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource9,GPIO_AF_USART3); //GPIOD9复用为USART3
-
-	GPIO_Configuration(GPIO_Pin_10 | GPIO_Pin_11,
-					   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
-	GPIO_PinAFConfig(GPIOC,GPIO_PinSource10,GPIO_AF_UART4); //GPIOC10复用为UART4
-	GPIO_PinAFConfig(GPIOC,GPIO_PinSource11,GPIO_AF_UART4); //GPIOC11复用为UART4
-
+	
+		GPIO_Configuration(GPIO_Pin_10 | GPIO_Pin_11,GPIO_Mode_AF,
+	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
+	GPIO_PinAFConfig(GPIOC,GPIO_PinSource10,GPIO_AF_UART4); //GPIOB6复用为USART4
+	GPIO_PinAFConfig(GPIOC,GPIO_PinSource11,GPIO_AF_UART4); //GPIOB7复用为USART4
+	
 //----------------------------USART---------------------------------------------------------------------------------------------	
 //	GPIO_Configuration(GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15,
 //	                   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOB);
@@ -204,7 +245,7 @@ void nvic_config()
 	
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2 2:2   抢占：响应    共 3级:3级
 	
-	NVIC_Configuration(UART5_IRQn,3,3,ENABLE);
+	NVIC_Configuration(UART5_IRQn,2,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
 	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
@@ -212,17 +253,11 @@ void nvic_config()
 	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
 
 	
-//	NVIC_InitStructure.NVIC_IRQChannel=SPI1_IRQn;
-//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;//1
-//    NVIC_InitStructure.NVIC_IRQChannelSubPriority =0;//0
-//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//    NVIC_Init(&NVIC_InitStructure);
-	
 }
 
 void USART_SendString(USART_TypeDef* USARTx, char *fmt, ...)
  {
-	char buffer[STR_BUFFER_LEN+1];  // 
+	char buffer[STR_BUFFER_LEN+1];  // CMD_BUFFER_LEN长度自己定义吧
 	u8 i = 0;
 	
 	va_list arg_ptr;
@@ -232,13 +267,14 @@ void USART_SendString(USART_TypeDef* USARTx, char *fmt, ...)
 	while ((i < STR_BUFFER_LEN) && buffer[i])
 	{
 		if(buffer[i] == '\n'){
-        USART_SendData(USARTx,(u8)'\r');
-        while (USART_GetFlagStatus(USARTx, USART_FLAG_TXE) == RESET); 
-        USART_SendData(USARTx,(u8)buffer[i++]);
-        }else{
+			
+			USART_SendData(USARTx,(u8)'\r');
+			while (USART_GetFlagStatus(USARTx, USART_FLAG_TXE) == RESET); 
+			USART_SendData(USARTx,(u8)buffer[i++]);
+		}else{
 	    USART_SendData(USARTx, (u8) buffer[i++]);
-        }
-        while (USART_GetFlagStatus(USARTx, USART_FLAG_TXE) == RESET); 
+		}
+		while (USART_GetFlagStatus(USARTx, USART_FLAG_TXE) == RESET); 
 	}
 	va_end(arg_ptr);
  } 

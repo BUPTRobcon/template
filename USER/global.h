@@ -16,12 +16,20 @@
 
 
 #define STR_BUFFER_LEN 128
+#define MOTOR_USARTx USART1
+#define PI 3.1415926
+
 #define USART_REC_LEN  			200 
 extern u8  UART5_RX_BUF[USART_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.末字节为换行符 
 extern u16 UART5_RX_STA;         		//接收状态标记	
-extern u8  USART3_RX_BUF[USART_REC_LEN];    
-extern u16 USART3_RX_STA;
-
+extern u8  USART1_RX_BUF[USART_REC_LEN];    
+extern u16 USART1_RX_STA;
+extern float direction_angle;
+extern u8 Hand_flag;
+extern int WANTSPEED;
+extern u8 Turn_R_Flag ,Turn_L_Flag ;
+extern u8 TURN_Flag;
+extern u8 OPEN_Hander;
 
 void uart_init(u32 bound);
 void rcc_config(void);

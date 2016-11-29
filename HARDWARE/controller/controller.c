@@ -120,7 +120,7 @@ int handle_init(){
 	return 0;
 }
 void handler_test(void){
-	USART_SendString(bluetooth,"%x\t%x\t%x\t%x\t%x\n",data[4],data[5],data[6],data[7],data[8]);
+	USART_SendString(DEBUG,"%x\t%x\t%x\t%x\t%x\n",data[4],data[5],data[6],data[7],data[8]);
 }
 
 void check(void){

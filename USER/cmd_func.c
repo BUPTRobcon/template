@@ -1,6 +1,5 @@
 #include "cmd_func.h"
 #include "cmd.h"
-#include "global.h"
 #include "stdlib.h"
 #include "string.h"
 #include "math.h"
@@ -19,7 +18,7 @@ static float motor_v;
 extern float pur_pitch;
 extern float pur_roll;
 
-extern int pitch_flag,roll_flag;
+extern bool pitch_flag,roll_flag;
 
 void cmd_reboot_func(int argc,char *argv[]){
     NVIC_SystemReset();
@@ -197,20 +196,15 @@ void cmd_launch_func(int argc,char *argv[])
 				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f);
     }else if (strcmp(argv[1],"start")==0)
     {
-        USART_SendString(UART4,"\r1v100\r");
+        USART_SendString(UART4,"1v100\r");
     }else if (strcmp(argv[1],"stop")==0)
     {
 		TIM_SetCompare1(TIM8,1000000/50*7.0/100 - 1);
-        USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
+        USART_SendString(UART4,"2v0\r");
+
     }else if (strcmp(argv[1],"pushstop")==0)
     {
-        USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
-		USART_SendString(UART4,"\rv0\r");
+        USART_SendString(UART4,"2v0\r");
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);
@@ -232,12 +226,12 @@ void cmd_launch_func(int argc,char *argv[])
 		{
 			pitch = atof(argv[3]);//0-100
 			pur_pitch = pitch;
-			pitch_flag = 1;
+			pitch_flag = true;
 		}else if(strcmp(argv[2], "roll")==0)
 		{
 			roll = atof(argv[3]);
 			pur_roll = roll;
-			roll_flag = 1;
+			roll_flag = true;
         }else if(strcmp(argv[2], "speed")==0)
 		{
 			speed = atof(argv[3]);
@@ -252,9 +246,9 @@ void cmd_launch_func(int argc,char *argv[])
 			speed = atof(argv[4]);
 			yaw = atof(argv[5]);
 			pur_pitch = pitch;
-			pitch_flag = 1;
+			pitch_flag = true;
 			pur_roll = roll;
-			roll_flag = 1;
+			roll_flag = true;
 			TIM_SetCompare1(TIM8,1000000/50*speed/100 - 1);
 		}
 		

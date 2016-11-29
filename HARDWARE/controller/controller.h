@@ -3,11 +3,12 @@
 #include "spi.h"
 #include <stdbool.h>
 
-#ifndef bluetooth
-#define bluetooth UART5
+#ifndef DEBUG
+#define DEBUG UART5
 #endif
 
 #define controller SPI2
+
 #define ATT GPIO_Pin_12	
 int handle_init(void);
 void handler_test(void);

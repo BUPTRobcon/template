@@ -1,5 +1,5 @@
 #include "link_list.h"
-#include "global.h"
+#include "configuration.h"
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"

@@ -1,12 +1,12 @@
 #include "cmd.h"
 #include "stm32f4xx_usart.h"
 #include "stdlib.h"
-#include "global.h"
+#include "configuration.h"
 #include "string.h"
 #include "stdarg.h"
 #include "cmd_func.h"
-#include "misc.h"
-#include "stm32f4xx_it.h"
+//#include "misc.h"
+//#include "stm32f4xx_it.h"
 static cmd_struct cmd_tbl[] = {
     /*
      * 若需添加命令，需要在此加上：
@@ -157,9 +157,9 @@ void UART5_IRQHandler(void){
     int cmd_argc,i;
     int erro_n;
     u8 c_recv;
-
-    if(USART_GetITStatus(CMD_USARTx,USART_IT_RXNE) != RESET){      
-        USART_ClearITPendingBit(CMD_USARTx,USART_IT_RXNE);
+    
+	if(USART_GetITStatus(CMD_USARTx,USART_IT_RXNE) != RESET){      
+        //USART_ClearITPendingBit(CMD_USARTx,USART_IT_RXNE);
         c_recv = USART_ReceiveData(CMD_USARTx);           
         if(c_recv == '\n'){  //接受完一次指令
             if(cmd_line_length == 0){

@@ -27,32 +27,37 @@
  */
 
 
+#ifndef __CMD_H
+#define __CMD_H
 #include "sys.h"
-/****************************以下是使用代码之前，必须配置的宏*******************************/
+#include "usart.h"
+///****************************以下是使用代码之前，必须配置的宏*******************************/
 #define CMD_USARTn 5    //接收命令的串口号
 //自动初始化外设使能,如果使能了，则调用cmd_init()函数之后，即可初始化好串口和中断
 #define CMD_PERIPH_INIT_EN 0
 
-//如果没有使能自动初始化，则无需配置下面的宏了
-#if CMD_PERIPH_INIT_EN == 1
-    #define CMD_NVIC_GROUP NVIC_PriorityGroup_1               //中断组别 
-    #define CMD_NVIC_IRQPP 0              //中断抢断优先级
-    #define CMD_NVIC_IRQSP 0              //中断子优先级
-    #define CMD_USART_BAUD 115200         //串口波特率
-#endif
+////如果没有使能自动初始化，则无需配置下面的宏了
+//#if CMD_PERIPH_INIT_EN == 1
+//    #define CMD_NVIC_GROUP NVIC_PriorityGroup_1               //中断组别 
+//    #define CMD_NVIC_IRQPP 0              //中断抢断优先级
+//    #define CMD_NVIC_IRQSP 0              //中断子优先级
+//    #define CMD_USART_BAUD 115200         //串口波特率
+//#endif
 
-/**************以上是使用代码之前，必须配置的宏****************/
+///**************以上是使用代码之前，必须配置的宏****************/
 
 
-#if CMD_USARTn == 1
-    #define CMD_USARTx USART1 
-#elif CMD_USARTn == 2
-    #define CMD_USARTx USART2 
-#elif CMD_USARTn == 3
-    #define CMD_USARTx USART3
-#elif CMD_USARTn == 5
-    #define CMD_USARTx UART5
-#endif
+//#if CMD_USARTn == 1
+//    #define CMD_USARTx USART1 
+//#elif CMD_USARTn == 2
+//    #define CMD_USARTx USART2 
+//#elif CMD_USARTn == 3
+//    #define CMD_USARTx USART3
+//#elif CMD_USARTn == 5
+//    #define CMD_USARTx UART5
+//#endif
+
+#define CMD_USARTx bluetooth
 
 
 #define MAX_CMD_ARG_LENGTH 16
@@ -79,3 +84,6 @@ typedef struct {
 void cmd_init(void);
 int cmd_parse(char *cmd_line,int *argc,char *argv[]);  //命令行解析
 int cmd_exec(int argc,char *argv[]);
+#endif
+	
+	

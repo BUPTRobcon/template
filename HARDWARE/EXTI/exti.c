@@ -1,5 +1,4 @@
-#include "exti.h"
-
+#include "usart.h"
 
 int wait_cnt=-1;
 

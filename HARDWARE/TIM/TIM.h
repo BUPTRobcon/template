@@ -1,6 +1,6 @@
 #ifndef __TIM_H
 #define __TIM_H
-#include "global.h"
+#include "configuration.h"
 
 void TIM8_Init(); 
 void TIM3_Init();

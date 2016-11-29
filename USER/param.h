@@ -2,7 +2,7 @@
 #define __PARAM_H
 
 #include "link_list.h"
-#include "global.h"
+//#include "configuration.h"
 
 typedef struct 		//launch链表节点数据
 {

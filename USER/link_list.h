@@ -1,5 +1,5 @@
 #include "stm32f4xx.h"
-#include "global.h"
+#include "configuration.h"
 
 typedef struct node{
     void *data;

@@ -63,10 +63,10 @@ void USART3_IRQHandler(void)
 			case 'A':
 				ptrB=LU_KEY;
 				break;
-			case 'B':
+			case 'D':
 				ptrB=LR_KEY;
 				break;
-			case 'D':
+			case 'B':
 				ptrB=LD_KEY;
 				break;
 			case 'C':
@@ -87,13 +87,13 @@ void USART3_IRQHandler(void)
 			case 'I':       
 				ptrB=RU_KEY;
 				break;
-			case 'J':       
+			case 'L':       
 				ptrB=RR_KEY;
 				break;
-			case 'K':       
+			case 'J':       
 				ptrB=RD_KEY;
 				break;
-			case 'L':        
+			case 'K':        
 				ptrB=RL_KEY;
 				break;
 			default:

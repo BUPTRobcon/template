@@ -58,44 +58,6 @@ bottons* b[12]={&LU,&LR,&LD,&LL,&RU,&RR,&RD,&RL,&L1,&L2,&R1,&R2};
 
 void bottons_check(){
 	if (ptrB>-1){
-		switch (ptrB){
-			case 0:
-				USART_SendString(bluetooth,"LU pushed\n");
-				break;
-			case 1:
-				USART_SendString(bluetooth,"LR pushed\n");
-				break;
-			case 2:
-				USART_SendString(bluetooth,"LD pushed\n");
-				break;
-			case 3:
-				USART_SendString(bluetooth,"LL pushed\n");
-				break;
-			case 9:     
-				USART_SendString(bluetooth,"L2 pushed\n");
-				break;
-			case 11:
-				USART_SendString(bluetooth,"R2 pushed\n");
-				break;
-			case 10:        
-				USART_SendString(bluetooth,"R1 pushed\n");
-				break;
-			case 8:
-				USART_SendString(bluetooth,"L1 pushed\n");
-				break;
-			case 4:       
-				USART_SendString(bluetooth,"RU pushed\n");
-				break;
-			case 5:       
-				USART_SendString(bluetooth,"RR pushed\n");
-				break;
-			case 6:       
-				USART_SendString(bluetooth,"RD pushed\n");
-				break;
-			case 7:        
-				USART_SendString(bluetooth,"RL pushed\n");
-				break;
-		}
 		b[ptrB]->cnt=20;
 		b[ptrB]->ispressed=true;
 		ptrB=-1;
@@ -104,15 +66,6 @@ void bottons_check(){
 
 void sticks_check(int Hx,int Hy){
 	if (ptrS>0){
-		
-		switch(ptrS){
-			case 1:
-				USART_SendString(bluetooth,"L(%d,%d)\n",Hx,Hy);
-				break;
-			case 2:
-				USART_SendString(bluetooth,"R(%d,%d)\n",Hx,Hy);
-				break;
-		}
 		if (Hx>=0&&Hx<256&&Hy>=0&&Hy<256){
 			s[ptrS-1]->x=Hx-127;
 			s[ptrS-1]->y=128-Hy;}
@@ -131,8 +84,6 @@ void TIM2_IRQHandler(void){
 			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
 			for (i=0;i<12;i++) 
 			 {
-				 if (b[i]->cnt==1)
-					 USART_SendString(bluetooth,"over\n");
 				 if (b[i]->cnt>0) b[i]->cnt--;
 				 if (b[i]->cnt==0)
 					 b[i]->ispressed=false;
@@ -196,11 +147,11 @@ int main(void)
 	{
 		bottons_check();
 		sticks_check(Hx,Hy);
-//		pos_x = g_vega_pos_x* 0.0001 * 0.81;
-//		pos_y = g_vega_pos_y* 0.0001 * 0.81;
-//		angle = (g_vega_angle/180.f)*PI;
-//		//USART_SendString(UART5,"\n\nX=%f   Y=%f  angle=%f\n",pos_x, pos_y , angle);
-//		ChassisSpeed= WANTSPEED;		
+		pos_x = g_vega_pos_x* 0.0001 * 0.81;
+		pos_y = g_vega_pos_y* 0.0001 * 0.81;
+		angle = (g_vega_angle/180.f)*PI;
+		//USART_SendString(UART5,"\n\nX=%f   Y=%f  angle=%f\n",pos_x, pos_y , angle);
+		ChassisSpeed= WANTSPEED;		
 //		if(OPEN_Hander ==0){
 //			/**-------------------------自动部分--------------------------------**/
 //			
@@ -331,51 +282,63 @@ int main(void)
 //			USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",0 , 0 , 0);
 //			delay_ms(8);
 //		}
-//		
-//		if (pitch_flag){
-//			pitch.now = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
-//			pitch.d = pur_pitch - pitch.now;
-//			pitch.dd = pitch.d - pitch.d_last;
-//			pitch.d_last = pitch.d;
-//			if (fabs(pitch.d)<0.01){
-//				if (pitch.cnt > 10){
-//					pitch_flag=false;
-//					pitch_move(0);
-//				}else{
-//					pitch.cnt++;
-//					pitch_move(pitch.d * 300 + pitch.dd * 240);
-//				}
-//			}else{
-//				pitch.cnt=0;
-//				pitch_move(pitch.d * 300 + pitch.dd * 240);
-//			}
-//		}
-//		if (roll_flag){
-//			roll.now = (TIM3_round * 30000.f - TIM3->CNT)/10000.f;
-//			roll.d = pur_roll - roll.now;
-//			roll.dd = roll.d - roll.d_last;
-//			roll.d_last = roll.d;
-//			if (fabs(roll.d)<0.01){
-//				if (roll.cnt > 10){
-//					roll_flag=false;
-//					roll_move(0);
-//				}else{
-//					roll.cnt++;
-//					roll_move(roll.d * 300 + roll.dd * 240);
-//				}
-//			}else{
-//				roll.cnt=0;
-//				roll_move(roll.d * 300 + roll.dd * 240);
-//			}
-//		}
-//		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
-//			TIM3_display=TIM3_round*30000-TIM3->CNT;
-//			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
-//		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
-//			TIM4_display=TIM4_round*30000-TIM4->CNT;
-//			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		
-//			USART_SendString(UART5,"TIM3:%d\n",TIM3_round*30000+TIM3->CNT);
-//			USART_SendString(UART5,"TIM4:%d\n",TIM4_round*30000+TIM4->CNT);
+		errorAngle = angle - START.ANG;
+		TURN_speed=0;
+		if (L1.ispressed) TURN_speed-=400;
+		if (R1.ispressed) TURN_speed+=400;
+		if (LU.ispressed) direction_angle = -PI/2;
+		else if (LD.ispressed) direction_angle = PI/2;
+		else if (LL.ispressed) direction_angle = PI;
+		else if (LR.ispressed) direction_angle = 0;
+		else ChassisSpeed = 0;
+		Chassis_motor3 =-1* (ChassisSpeed*cos((CH_angle_M3 +errorAngle) - direction_angle)+TURN_speed);
+		Chassis_motor4 = ChassisSpeed*cos((CH_angle_M4+errorAngle)- direction_angle)+TURN_speed;
+		Chassis_motor2 = -1* (ChassisSpeed*cos((CH_angle_M2 +errorAngle) - direction_angle)+TURN_speed);
+		USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
+		if (pitch_flag){
+			pitch.now = (TIM4_round * 30000.f - TIM4->CNT)/10000.f;
+			pitch.d = pur_pitch - pitch.now;
+			pitch.dd = pitch.d - pitch.d_last;
+			pitch.d_last = pitch.d;
+			if (fabs(pitch.d)<0.01){
+				if (pitch.cnt > 10){
+					pitch_flag=false;
+					pitch_move(0);
+				}else{
+					pitch.cnt++;
+					pitch_move(pitch.d * 300 + pitch.dd * 240);
+				}
+			}else{
+				pitch.cnt=0;
+				pitch_move(pitch.d * 300 + pitch.dd * 240);
+			}
+		}
+		if (roll_flag){
+			roll.now = (TIM3_round * 30000.f - TIM3->CNT)/10000.f;
+			roll.d = pur_roll - roll.now;
+			roll.dd = roll.d - roll.d_last;
+			roll.d_last = roll.d;
+			if (fabs(roll.d)<0.01){
+				if (roll.cnt > 10){
+					roll_flag=false;
+					roll_move(0);
+				}else{
+					roll.cnt++;
+					roll_move(roll.d * 300 + roll.dd * 240);
+				}
+			}else{
+				roll.cnt=0;
+				roll_move(roll.d * 300 + roll.dd * 240);
+			}
+		}
+		if (TIM3_round*30000-TIM3->CNT!=TIM3_display){
+			TIM3_display=TIM3_round*30000-TIM3->CNT;
+			USART_SendString(UART5,"TIM3:%d\n",TIM3_display);}
+		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
+			TIM4_display=TIM4_round*30000-TIM4->CNT;
+			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		
+			USART_SendString(UART5,"TIM3:%d\n",TIM3_round*30000+TIM3->CNT);
+			USART_SendString(UART5,"TIM4:%d\n",TIM4_round*30000+TIM4->CNT);
 	}
 }
 

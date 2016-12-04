@@ -19,9 +19,9 @@ typedef struct
 void pitch_move(float v);
 void roll_move(float v);
 
+
 void bottons_check();
 void sticks_check(int Hx,int Hy);
 
-
-
 #endif
+

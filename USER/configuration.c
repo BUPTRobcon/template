@@ -6,7 +6,7 @@ EXTI_InitTypeDef exti_init_structure;
 
 float direction_angle = 90;
 u8 Hand_flag = 0;
-int WANTSPEED = 800;
+int WANTSPEED = 8000;
 u8 TURN_Flag = 0;
 u8 Turn_R_Flag = 0 ,Turn_L_Flag = 0;
 u8 OPEN_Hander = 1;
@@ -120,6 +120,7 @@ void system_clk_set(void){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 	
 }
 
@@ -168,6 +169,9 @@ void gpio_config(void)
 	GPIO_Configuration(GPIO_Pin_6 | GPIO_Pin_7,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOA);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_TIM3); 	
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_TIM3); 
+	GPIO_Configuration(GPIO_Pin_0 | GPIO_Pin_1,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOA);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_TIM5); 	
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_TIM5); 
 //----------------------------‘ˆ¡ø¬Î≈Ã---------------------------------------------------------------------------------------------
 	
 	GPIO_Configuration(GPIO_Pin_11,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOF);
@@ -224,6 +228,7 @@ void nvic_config()
 	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
 	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
+	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);
 	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
 
 	

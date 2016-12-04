@@ -45,24 +45,24 @@ void sticks_check(int Hx,int Hy){
 	}
 }
 
-void TIM2_IRQHandler(void){
-	int i;
-	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
-		{
-			if (wait_cnt>-1)
-				if (++wait_cnt==50)
-				{	USART_SendString(UART5,"Good to go\n");
-					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
-			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
-			for (i=0;i<12;i++) 
-			 {
-				 if (b[i]->cnt>0) b[i]->cnt--;
-				 if (b[i]->cnt==0)
-					 b[i]->ispressed=false;
-			 }
-			//USART_SendString(UART5,"%d\n",rounds*2000 + TIM4->CNT);
-		}	
-}
+//void TIM2_IRQHandler(void){
+//	int i;
+//	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
+//		{
+//			if (wait_cnt>-1)
+//				if (++wait_cnt==50)
+//				{	USART_SendString(UART5,"Good to go\n");
+//					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
+//			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
+//			for (i=0;i<12;i++) 
+//			 {
+//				 if (b[i]->cnt>0) b[i]->cnt--;
+//				 if (b[i]->cnt==0)
+//					 b[i]->ispressed=false;
+//			 }
+//			//USART_SendString(UART5,"%d\n",rounds*2000 + TIM4->CNT);
+//		}	
+//}
 
 
 

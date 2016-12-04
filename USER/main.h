@@ -24,8 +24,9 @@ bottons LU,LR,LD,LL,RU,RR,RD,RL,L1,L2,R1,R2;
 bottons* b[12]={&LU,&LR,&LD,&LL,&RU,&RR,&RD,&RL,&L1,&L2,&R1,&R2};
 sticks L,R;
 sticks* s[2]={&L,&R};
-
+extern int wait_cnt;
 
 
 
 #endif
+

@@ -1,3 +1,7 @@
+#ifndef __CONFIGURATION_H
+#define __CONFIGURATION_H
+
+
 #include "stdio.h"	
 #include "stm32f4xx.h"
 #include "stm32f4xx_conf.h"
@@ -24,6 +28,15 @@
 //extern u8  USART1_RX_BUF[USART_REC_LEN];    
 //extern u16 USART1_RX_STA;
 
+typedef struct 
+{
+	float X;
+	float Y;
+	float ANG;
+}POSITION;
+
+extern POSITION START,END;
+
 extern float direction_angle;
 extern u8 Hand_flag;
 extern int WANTSPEED;
@@ -46,6 +59,6 @@ void EXTI_Configuration(uint32_t EXTI_Line,
                 FunctionalState EXTI_LineCmd);
 
 
-
+#endif
 
 

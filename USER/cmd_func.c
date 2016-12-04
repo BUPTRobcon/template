@@ -1,16 +1,23 @@
 #include "cmd_func.h"
 #include "cmd.h"
 #include "stdlib.h"
+#include "configuration.h"
 #include "string.h"
 #include "math.h"
 #include "param.h"
 
+extern s8 ptrS,ptrB;
+
 extern Param * param;
 extern bool g_stop_flag;
-u8 target=1;       //目标0-6
-extern float g_vega_x;
-extern float g_vega_y;
+extern float pos_x;
+extern float pos_y;
+extern float angle;
 extern int TIM3_round,TIM4_round;
+extern int WantSpeed;
+
+u8 target=1;       				//目标0-6
+
 static list_node * now_pos_ptr;
 static Pos_data * now_pos;     //当前点的数据指针
 static float motor_v;
@@ -41,14 +48,14 @@ void cmd_pos_func(int argc,char *argv[])
     int no;
     int no0;
     int i;
-    float pos_x,pos_y;
+    float x,y;
     Pos_data *data;
     list_node * ptr;
     int start_no,end_no;
     int erro_no;
     if (strcmp(argv[1], "now") == 0)
     {
-        USART_SendString(CMD_USARTx, "x:%f y:%f\n", g_vega_x,g_vega_y);
+        USART_SendString(CMD_USARTx, "x:%f y:%f\n", pos_x,pos_y);
     }else
     if(strcmp(argv[1],"add") == 0){
         if(argc < 5){
@@ -56,17 +63,17 @@ void cmd_pos_func(int argc,char *argv[])
             USART_SendString(CMD_USARTx,"msg:    pos add <no> <x> <y>\n");
         }
         no = atoi(argv[2]);
-        pos_x = atof(argv[3]);
-        pos_y = atof(argv[4]);
+        x = atof(argv[3]);
+        y = atof(argv[4]);
         data = (Pos_data *)malloc(sizeof(Pos_data));
-        data->x = pos_x;
-        data->y = pos_y;
+        data->x = x;
+        data->y =  y;
         for (i = 0; i < 7; ++i)
         {
             data->d[i].launch_num = 0;
             list_init(&data->d[i].launch_ptr);
         }
-        if((erro_no = list_insert(&param->pos_ptr, no, data)) <= 0){
+        if((erro_no = list_insert(&param-> pos_ptr, no, data)) <= 0){
             USART_SendString(CMD_USARTx,"msg: Error:%d\n",erro_no);
         }else{
 			param->pos_num++;
@@ -110,11 +117,11 @@ void cmd_pos_func(int argc,char *argv[])
             USART_SendString(CMD_USARTx,"msg: Error cmd format\n");
             return;
         }
-        pos_x = atof(argv[3]);
-        pos_y = atof(argv[4]);
+         x = atof(argv[3]);
+         y = atof(argv[4]);
 
-        data->x = pos_x;
-        data->y = pos_y;
+        data->x =  x;
+        data->y =  y;
         print_pos_list(param->pos_ptr->link);
     }else if (strcmp(argv[1], "jmp")==0)
     {
@@ -140,6 +147,17 @@ void cmd_action_func(int argc,char *argv[])
     float x, y, v;
     float yaw;
     list_node * ptr;
+    if(strcmp(argv[1],"left")==0){
+        OPEN_Hander = 1;
+		ptrB=L1_KEY;
+    }else if(strcmp(argv[1],"right")==0){
+        OPEN_Hander = 1;
+		ptrB=R1_KEY;
+    }else if (strcmp(argv[1],"rotate")==0){
+        v = atof(argv[2]);
+        yaw = atof(argv[3]);
+        //测试底盘电机转动到一定角度
+    }else
     if (argc == 1)
     {
         now_pos_ptr = now_pos_ptr->link;
@@ -154,14 +172,23 @@ void cmd_action_func(int argc,char *argv[])
     }else if (argc == 4){
         x = atof(argv[1]);
         y = atof(argv[2]);
+        //跑到指定的位置
+		END.X = x;
+		END.Y = y;
+		END.ANG = angle;
+		OPEN_Hander = 0;
+    }else if (argc == 4){
+        x = atof(argv[1]);
+        y = atof(argv[2]);
         v = atof(argv[3]);
         //跑到指定的位置
+		END.X = x;
+		END.Y = y;
+		END.ANG = angle;
+		WANTSPEED = v;
+		OPEN_Hander = 0;
     }
-	if (strcmp(argv[1],"rotate")==0){
-        v = atof(argv[2]);
-        yaw = atof(argv[3]);
-        //测试底盘电机转动到一定角度
-    }
+	
 }
 
 void cmd_switch_func(int argc,char *argv[])
@@ -192,19 +219,19 @@ void cmd_launch_func(int argc,char *argv[])
     }else if (strcmp(argv[1], "now")==0)
     {
         //发射参数
-        USART_SendString(CMD_USARTx, "pitch:%.3f roll:.3%f speed:0 yaw:0\n",
-				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f);
+        USART_SendString(CMD_USARTx, "pitch:%.6f roll:%.6f speed:%.6f yaw:%.6f\n",
+				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f,speed,angle);
     }else if (strcmp(argv[1],"start")==0)
     {
         USART_SendString(UART4,"1v100\r");
     }else if (strcmp(argv[1],"stop")==0)
     {
-		TIM_SetCompare1(TIM8,1000000/50*7.0/100 - 1);
-        USART_SendString(UART4,"2v0\r");
+		WantSpeed = 0;
+        USART_SendString(UART4,"1v0\r");
 
     }else if (strcmp(argv[1],"pushstop")==0)
     {
-        USART_SendString(UART4,"2v0\r");
+        USART_SendString(UART4,"1v0\r");
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);
@@ -219,7 +246,15 @@ void cmd_launch_func(int argc,char *argv[])
         roll = data->roll;
         speed = data->speed;
         yaw = data->yaw;
-        //直接调整
+        pur_pitch = pitch;
+		pitch_flag = true;
+		pur_roll = roll;
+		roll_flag = true;
+		WantSpeed = speed;
+		END.X = pos_x;
+		END.Y = pos_y;
+		END.ANG = yaw;
+		OPEN_Hander = 0;
     }else if (strcmp(argv[1], "set")==0)
     {
 		if(strcmp(argv[2], "pitch")==0)
@@ -235,11 +270,13 @@ void cmd_launch_func(int argc,char *argv[])
         }else if(strcmp(argv[2], "speed")==0)
 		{
 			speed = atof(argv[3]);
-			TIM_SetCompare1(TIM8,1000000/50*speed/100 - 1);
-		}else if(strcmp(argv[2], "speed")==0)
+			WantSpeed = speed;
+		}else if(strcmp(argv[2], "yaw")==0)
 		{
 			yaw = atof(argv[3]);
-        }else{
+			END.ANG = yaw;
+			OPEN_Hander = 0;
+        }else if(argc == 6) {
 		//直接调整
 			pitch = atof(argv[2]);
 			roll = atof(argv[3]);
@@ -249,7 +286,9 @@ void cmd_launch_func(int argc,char *argv[])
 			pitch_flag = true;
 			pur_roll = roll;
 			roll_flag = true;
-			TIM_SetCompare1(TIM8,1000000/50*speed/100 - 1);
+			WantSpeed = speed;
+			END.ANG = yaw;
+			OPEN_Hander = 0;
 		}
 		
     }else if (strcmp(argv[1], "print")==0)

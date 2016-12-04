@@ -3,9 +3,7 @@
 //extern u8 cmd,sticks[4];
 //extern u8 ptr;
 
-extern int wait_cnt;
-extern int TIM3_round,TIM4_round;
-extern s8 ptrS,ptrB;
+
 
 //全局变量定义区
 bool g_stop_flag;
@@ -19,8 +17,6 @@ float angle;
 float Default_angle;
 int Chassis_motor2 =0 , Chassis_motor3 =0 , Chassis_motor4 =0 ;
 float CH_angle_M2 = -PI/2 - 2*PI/3 ,CH_angle_M3 = -PI/2 , CH_angle_M4 = -PI/2 + 2*PI/3;
-static u8 run_FLAG = 0;
-static u8 run_FLAG_turn = 0;
 static int TURN_speed = 0;
 int ChassisSpeed = 1000;
 
@@ -37,60 +33,6 @@ POSITION END,START;
 
 
 
-typedef struct 
-{
-	bool ispressed;
-	u8 cnt;
-//  void * func;
-}bottons;
-
-bottons LU,LR,LD,LL,RU,RR,RD,RL,L1,L2,R1,R2;
-
-typedef struct 
-{
-	s8 x,y;
-}sticks;
-sticks L,R;
-sticks* s[2]={&L,&R};
-
-bottons* b[12]={&LU,&LR,&LD,&LL,&RU,&RR,&RD,&RL,&L1,&L2,&R1,&R2};
-
-
-void bottons_check(){
-	if (ptrB>-1){
-		b[ptrB]->cnt=20;
-		b[ptrB]->ispressed=true;
-		ptrB=-1;
-	}
-}
-
-void sticks_check(int Hx,int Hy){
-	if (ptrS>0){
-		if (Hx>=0&&Hx<256&&Hy>=0&&Hy<256){
-			s[ptrS-1]->x=Hx-127;
-			s[ptrS-1]->y=128-Hy;}
-		ptrS=0;
-	}
-}
-
-void TIM2_IRQHandler(void){
-	int i;
-	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
-		{
-			if (wait_cnt>-1)
-				if (++wait_cnt==50)
-				{	USART_SendString(UART5,"Good to go\n");
-					USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);wait_cnt=-1;}
-			TIM_ClearITPendingBit(TIM2,TIM_FLAG_Update);//必须清除中断标志位否则一直中断
-			for (i=0;i<12;i++) 
-			 {
-				 if (b[i]->cnt>0) b[i]->cnt--;
-				 if (b[i]->cnt==0)
-					 b[i]->ispressed=false;
-			 }
-			//USART_SendString(UART5,"%d\n",rounds*2000 + TIM4->CNT);
-		}	
-}
 
 
 
@@ -100,7 +42,7 @@ int main(void)
 {   //system_stm32f4xx.c #define PLL_M=8 PLL_N=336 HSE -> SYSCLK 168MHZ
 	// RCC->CFGR |= RCC_CFGR_PPRE2_DIV2; APHB1_CLK 84MHZ
 	//AHB 168MHZ  APB2 84MHZ  APB1 42MHZ
-	
+	extern int TIM3_round,TIM4_round;
 
 	int TIM3_display=0,TIM4_display=0;
 	int Hx,Hy;
@@ -337,8 +279,6 @@ int main(void)
 		if (TIM4_round*30000-TIM4->CNT!=TIM4_display){
 			TIM4_display=TIM4_round*30000-TIM4->CNT;
 			USART_SendString(UART5,"TIM4:%d\n",TIM4_display);}		
-			USART_SendString(UART5,"TIM3:%d\n",TIM3_round*30000+TIM3->CNT);
-			USART_SendString(UART5,"TIM4:%d\n",TIM4_round*30000+TIM4->CNT);
 	}
 }
 

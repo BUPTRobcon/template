@@ -188,7 +188,7 @@ void cmd_action_func(int argc,char *argv[])
 		END.X = x;
 		END.Y = y;
 		END.ANG = angle;
-		WANTSPEED = v;
+		Move_speed = v;
 		OPEN_Hander = 0;
     }
 	

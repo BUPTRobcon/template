@@ -103,6 +103,7 @@ int main(void)
 	EXTI_config();
 	nvic_config();
 	
+	set_params();
 	TIM3_Init();
 	TIM4_Init();
 	TIM5_Init();
@@ -149,7 +150,7 @@ int main(void)
 				error_X = END.X - pos_x;
 				error_Y = END.Y - pos_y;
 			
-				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*WANTSPEED;
+				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
 				if(ChassisSpeed>Speed_max)
 					ChassisSpeed = Speed_max;
 				if(ChassisSpeed<Speed_min && ChassisSpeed>0)

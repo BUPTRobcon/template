@@ -16,6 +16,8 @@ extern float angle;
 extern int TIM3_round,TIM4_round;
 extern int WantSpeed;
 extern int truespeed;
+extern float Move_radium,Angle_radium;
+extern int Speed_min,Speed_max,Angle_speed,Move_speed;
 
 u8 target=1;       				//ƒø±Í0-6
 
@@ -199,11 +201,19 @@ void cmd_switch_func(int argc,char *argv[])
     state2 = GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_14);
     USART_SendString(CMD_USARTx, "roll_switch:%d pitch_switch:%d", state1, state2);
 }
-
-void cmd_speed_func(int argc,char *argv[])
-{
-    float v = atof(argv[1]);
-    //…Ë÷√
+void cmd_param_func(int argc,char *argv[]){
+	if (strcmp(argv[0],"Speed_max")==0)
+		Speed_max = atoi(argv[1]);
+	else if (strcmp(argv[0],"Speed_min")==0)
+		Speed_min = atoi(argv[1]);
+	else if (strcmp(argv[0],"Move_speed")==0)
+		Move_speed = atoi(argv[1]);
+	else if (strcmp(argv[0],"Move_radium")==0)
+		Move_radium = atof(argv[1]);
+	else if (strcmp(argv[0],"Angle_radium")==0)
+		Angle_radium = atof(argv[1]);
+	else if (strcmp(argv[0],"Angle_speed")==0)
+		Angle_speed = atoi(argv[1]);
 }
 
 void cmd_launch_func(int argc,char *argv[])

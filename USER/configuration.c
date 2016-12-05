@@ -4,12 +4,14 @@ GPIO_InitTypeDef GPIO_InitStructure;
 NVIC_InitTypeDef NVIC_InitStructure;
 EXTI_InitTypeDef exti_init_structure;
 
+
+
 float direction_angle = 90;
-u8 Hand_flag = 0;
-int WANTSPEED = 8000;
-u8 TURN_Flag = 0;
-u8 Turn_R_Flag = 0 ,Turn_L_Flag = 0;
+//int WANTSPEED = 8000;
 u8 OPEN_Hander = 1;
+
+
+
 /*
  *º¯ÊýÃû£ºvoid GPIO_Configuration(uint16_t GPIO_Pin,
                         GPIOMode_TypeDef  GPIO_Mode,

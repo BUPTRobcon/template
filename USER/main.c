@@ -15,8 +15,7 @@ float Default_angle;
 int Chassis_motor2 =0 , Chassis_motor3 =0 , Chassis_motor4 =0 ;
 float CH_angle_M2 = -PI/2 - 2*PI/3 ,CH_angle_M3 = -PI/2 , CH_angle_M4 = -PI/2 + 2*PI/3;
 
-static int TURN_speed = 0;
-int ChassisSpeed = 1000;
+
 
 float Speed_Duty = 770;
 float Speed_P = 0.0030,Speed_D=0.3000 ,Speed_I =0.f;
@@ -32,9 +31,17 @@ int truespeed = 0;
 
 //--------------暂时用来草稿-------------
 
+float Move_radium,Angle_radium;
+int Speed_min,Speed_max,Angle_speed,Move_speed;
 
-
-
+void set_params(){
+	Speed_min = 20;
+	Speed_max = 2000;
+	Move_radium = 0.00001;
+	Angle_radium = 0.001;
+	Angle_speed = 800;
+	Move_speed = 6000;
+}
 
 void TIM2_IRQHandler(void){
 	int i;
@@ -87,6 +94,9 @@ int main(void)
 	u8 POS_Mark = 0;
 	float Pre_ErrorY = 0;
 	
+	static int TURN_speed;
+	static int ChassisSpeed;
+	
 	rcc_config();
 	gpio_config();
 	delay_init(168);  //初始化延时函数
@@ -132,7 +142,7 @@ int main(void)
 			pos_y = g_vega_pos_y* 0.0001 * 0.81;
 			angle = (g_vega_angle/180.f)*PI;
 			//USART_SendString(UART5,"\n\nX=%f   Y=%f  angle=%f\n",pos_x, pos_y , angle);
-			ChassisSpeed= WANTSPEED;		
+			ChassisSpeed= Move_speed;		
 			if(OPEN_Hander ==0){
 				/**-------------------------自动部分--------------------------------**/		
 				errorAngle = angle - END.ANG;
@@ -140,20 +150,20 @@ int main(void)
 				error_Y = END.Y - pos_y;
 			
 				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*WANTSPEED;
-				if(ChassisSpeed>2000)
-					ChassisSpeed = 2000;
-				if(ChassisSpeed<20 && ChassisSpeed>0)
-					ChassisSpeed = 20;
+				if(ChassisSpeed>Speed_max)
+					ChassisSpeed = Speed_max;
+				if(ChassisSpeed<Speed_min && ChassisSpeed>0)
+					ChassisSpeed = Speed_min;
 				
-				if(errorAngle >0.001){          //角度调整
-					TURN_speed =-800*errorAngle;
-				}else if(errorAngle <-0.001){
-					TURN_speed =-800*errorAngle;
+				if(errorAngle > Angle_radium){          //角度调整
+					TURN_speed =-Angle_speed*errorAngle;
+				}else if(errorAngle <-Angle_radium){
+					TURN_speed =-Angle_speed*errorAngle;
 				}else{
 					TURN_speed= 0;
 				}
 				
-				if(powf(error_X,2)+powf(error_Y,2) <= 0.00001){//已经到达
+				if(powf(error_X,2)+powf(error_Y,2) <= Move_radium){//已经到达
 					ChassisSpeed = 0;
 				}else{
 					direction_angle = atan2(error_Y,error_X);
@@ -179,6 +189,9 @@ int main(void)
 				Chassis_motor4 = ChassisSpeed*cos((CH_angle_M4+errorAngle)- direction_angle)+TURN_speed;
 				Chassis_motor2 = -1* (ChassisSpeed*cos((CH_angle_M2 +errorAngle) - direction_angle)+TURN_speed);
 				USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
+				END.X=pos_x;
+				END.Y=pos_y;
+				END.ANG=angle;
 			}
 			
 			if (pitch_flag){

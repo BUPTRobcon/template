@@ -228,7 +228,7 @@ void nvic_config()
 	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
 	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
-	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);
+//	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);
 	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
 
 	

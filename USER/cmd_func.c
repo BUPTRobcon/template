@@ -15,6 +15,7 @@ extern float pos_y;
 extern float angle;
 extern int TIM3_round,TIM4_round;
 extern int WantSpeed;
+extern int truespeed;
 
 u8 target=1;       				//目标0-6
 
@@ -219,8 +220,8 @@ void cmd_launch_func(int argc,char *argv[])
     }else if (strcmp(argv[1], "now")==0)
     {
         //发射参数
-        USART_SendString(CMD_USARTx, "pitch:%.6f roll:%.6f speed:%.6f yaw:%.6f\n",
-				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f,speed,angle);
+        USART_SendString(CMD_USARTx, "pitch:%.6f roll:%.6f speed:%d yaw:%.6f\n",
+				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f,truespeed,angle);
     }else if (strcmp(argv[1],"start")==0)
     {
         USART_SendString(UART4,"1v100\r");

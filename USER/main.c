@@ -23,7 +23,7 @@ float Speed_P = 0.0030,Speed_D=0.3000 ,Speed_I =0.f;
 
 POSITION END,START;
 
-#define MAXSPEED 800
+#define MAXSPEED 970
 #define MINSPEED 600
 int Speed_error = 0;
 int PRESpeed_error = 0;
@@ -40,20 +40,20 @@ void TIM2_IRQHandler(void){
 	int i;
 	if( TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET ) 
 		{
-			/*truespeed =  TIM5->CNT - 6000;
+			truespeed =  TIM5->CNT - 6000;
 			TIM5->CNT = 6000;
 			
 			PRESpeed_error = Speed_error;
 			Speed_error = truespeed - WantSpeed;
 	
-			Speed_Duty += (Speed_P*Speed_error + Speed_D*(Speed_error - PRESpeed_error));
+			Speed_Duty -= (Speed_P*Speed_error + Speed_D*(Speed_error - PRESpeed_error));
 		
 			if(Speed_Duty >MAXSPEED)
 				Speed_Duty = MAXSPEED ;
 			if(Speed_Duty < MINSPEED)
 				Speed_Duty = MINSPEED ;
-			TIM_SetCompare1(TIM8,1000000/50*Speed_Duty/10000 - 1);*/
-			
+			TIM_SetCompare1(TIM8,1000000/50*Speed_Duty/10000 - 1);
+			//USART_SendString(bluetooth,"msg: TrueSpeed:%d  WantSpeed:%d duty:%f\n",truespeed,WantSpeed,Speed_Duty);
 			if (wait_cnt>-1)
 				if (++wait_cnt==50)
 				{	USART_SendString(UART5,"Good to go\n");
@@ -95,6 +95,7 @@ int main(void)
 	
 	TIM3_Init();
 	TIM4_Init();
+	TIM5_Init();
 	TIM8_Init();
 //	SPI2_Init();
 	usart_init(&Hx,&Hy);

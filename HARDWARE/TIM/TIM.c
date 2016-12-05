@@ -7,7 +7,6 @@ TIM_ICInitTypeDef   TIM_ICInitStructure;
 int TIM3_round,TIM4_round;
 
 void TIM4_Init(){
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
 	TIM_DeInit(TIM4);
    
@@ -32,7 +31,6 @@ void TIM4_Init(){
 }
 
 void TIM3_Init(){
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
 	TIM_DeInit(TIM3);
    
@@ -57,16 +55,14 @@ void TIM3_Init(){
 }
 
 void TIM5_Init(){
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-
-	TIM_DeInit(TIM3);
+	TIM_DeInit(TIM5);
    
 	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
 	TIM_TimeBaseStructure.TIM_Prescaler = 0x0;  // No prescaling 42M
 	TIM_TimeBaseStructure.TIM_Period = 29999;  
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
  
 	TIM_EncoderInterfaceConfig(TIM5,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
 	TIM_ICStructInit(&TIM_ICInitStructure);
@@ -74,11 +70,11 @@ void TIM5_Init(){
 	TIM_ICInit(TIM5, &TIM_ICInitStructure);
 
 	TIM5->CNT=6000;
-	TIM3_round=0;
+//	TIM3_round=0;
 
-	TIM_ClearFlag(TIM3, TIM_FLAG_Update);
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	TIM_Cmd(TIM3, ENABLE);	
+//	TIM_ClearFlag(TIM3, TIM_FLAG_Update);
+//	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM5, ENABLE);	
 }
 
 void TIM2_Init()        //0.005ms 定时
@@ -88,7 +84,7 @@ void TIM2_Init()        //0.005ms 定时
 	TIM_DeInit(TIM2);
 	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
 	TIM_TimeBaseStructure.TIM_Prescaler = 42000 - 1;  //    84M/42000 =2000  0.5ms/count
-	TIM_TimeBaseStructure.TIM_Period = 9;  
+	TIM_TimeBaseStructure.TIM_Period = 5;  
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
     //计时器的时钟周期为 (4+1)*(71+1)/(72*10^6)=0.005ms   ?
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  

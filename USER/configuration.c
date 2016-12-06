@@ -171,13 +171,13 @@ void gpio_config(void)
 	GPIO_Configuration(GPIO_Pin_6 | GPIO_Pin_7,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOA);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_TIM3); 	
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_TIM3); 
-	GPIO_Configuration(GPIO_Pin_0 | GPIO_Pin_1,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOA);
+/*	GPIO_Configuration(GPIO_Pin_0 | GPIO_Pin_1,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_NOPULL,GPIOA);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_TIM5); 	
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_TIM5); 
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_TIM5); */
 //----------------------------增量码盘---------------------------------------------------------------------------------------------
 	
-	GPIO_Configuration(GPIO_Pin_11,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOF);
-	GPIO_Configuration(GPIO_Pin_14,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOE);
+/*	GPIO_Configuration(GPIO_Pin_11,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOF);
+	GPIO_Configuration(GPIO_Pin_14,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOE);*/
 //----------------------------触碰开关---------------------------------------------------------------------------------------------
 	
 	GPIO_Configuration(GPIO_Pin_6, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
@@ -227,11 +227,11 @@ void nvic_config()
 	
 	NVIC_Configuration(UART5_IRQn,2,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
-	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
+//	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
 	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
 //	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);
-	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
+//	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
 
 	
 }

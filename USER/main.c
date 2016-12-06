@@ -100,12 +100,12 @@ int main(void)
 	rcc_config();
 	gpio_config();
 	delay_init(168);  //初始化延时函数
-	EXTI_config();
+//	EXTI_config();
 	nvic_config();
 	
 	TIM3_Init();
 	TIM4_Init();
-	TIM5_Init();
+//	TIM5_Init();
 	TIM8_Init();
 //	SPI2_Init();
 	usart_init(&Hx,&Hy);
@@ -117,7 +117,7 @@ int main(void)
     vega_init(&g_vega_pos_x,&g_vega_pos_y,&g_vega_angle);
     vega_reset();
 	delay_ms(4000);
-	TIM2_Init();
+//	TIM2_Init();
 	USART_SendString(UART5,"msg: Let's go!\n");
 	
 	direction_angle = PI/2;
@@ -126,7 +126,6 @@ int main(void)
 	START.ANG = (g_vega_angle/180.f)*PI;
 	OPEN_Hander = 0;
 
-	
 	END = START;
 
     while(1) 
@@ -149,7 +148,7 @@ int main(void)
 				error_X = END.X - pos_x;
 				error_Y = END.Y - pos_y;
 			
-				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*WANTSPEED;
+				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
 				if(ChassisSpeed>Speed_max)
 					ChassisSpeed = Speed_max;
 				if(ChassisSpeed<Speed_min && ChassisSpeed>0)

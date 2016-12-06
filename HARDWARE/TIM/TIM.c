@@ -84,7 +84,7 @@ void TIM2_Init()        //0.005ms 定时
 	TIM_DeInit(TIM2);
 	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
 	TIM_TimeBaseStructure.TIM_Prescaler = 42000 - 1;  //    84M/42000 =2000  0.5ms/count
-	TIM_TimeBaseStructure.TIM_Period = 5;  
+	TIM_TimeBaseStructure.TIM_Period = 9;  
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
     //计时器的时钟周期为 (4+1)*(71+1)/(72*10^6)=0.005ms   ?
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  

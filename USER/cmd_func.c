@@ -172,23 +172,13 @@ void cmd_action_func(int argc,char *argv[])
         now_pos = ptr->data;
         now_pos_ptr = ptr;
         //跑到指定的点去
-    }else if (argc == 4){
+    }else if (argc == 3){
         x = atof(argv[1]);
         y = atof(argv[2]);
         //跑到指定的位置
 		END.X = x;
 		END.Y = y;
 		END.ANG = angle;
-		OPEN_Hander = 0;
-    }else if (argc == 4){
-        x = atof(argv[1]);
-        y = atof(argv[2]);
-        v = atof(argv[3]);
-        //跑到指定的位置
-		END.X = x;
-		END.Y = y;
-		END.ANG = angle;
-		WANTSPEED = v;
 		OPEN_Hander = 0;
     }
 	
@@ -202,18 +192,18 @@ void cmd_switch_func(int argc,char *argv[])
     USART_SendString(CMD_USARTx, "roll_switch:%d pitch_switch:%d", state1, state2);
 }
 void cmd_param_func(int argc,char *argv[]){
-	if (strcmp(argv[0],"Speed_max")==0)
-		Speed_max = atoi(argv[1]);
+	if (strcmp(argv[1],"Speed_max")==0)
+		Speed_max = atoi(argv[2]);
 	else if (strcmp(argv[0],"Speed_min")==0)
-		Speed_min = atoi(argv[1]);
-	else if (strcmp(argv[0],"Move_speed")==0)
-		Move_speed = atoi(argv[1]);
-	else if (strcmp(argv[0],"Move_radium")==0)
-		Move_radium = atof(argv[1]);
-	else if (strcmp(argv[0],"Angle_radium")==0)
-		Angle_radium = atof(argv[1]);
-	else if (strcmp(argv[0],"Angle_speed")==0)
-		Angle_speed = atoi(argv[1]);
+		Speed_min = atoi(argv[2]);
+	else if (strcmp(argv[1],"Move_speed")==0)
+		Move_speed = atoi(argv[2]);
+	else if (strcmp(argv[1],"Move_radium")==0)
+		Move_radium = atof(argv[2]);
+	else if (strcmp(argv[1],"Angle_radium")==0)
+		Angle_radium = atof(argv[2]);
+	else if (strcmp(argv[1],"Angle_speed")==0)
+		Angle_speed = atoi(argv[2]);
 }
 
 void cmd_launch_func(int argc,char *argv[])
@@ -297,7 +287,7 @@ void cmd_launch_func(int argc,char *argv[])
 			pitch_flag = true;
 			pur_roll = roll;
 			roll_flag = true;
-			WantSpeed = speed;
+			Move_speed = speed;
 			END.ANG = yaw;
 			OPEN_Hander = 0;
 		}

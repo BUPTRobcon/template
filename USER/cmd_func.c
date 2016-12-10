@@ -7,7 +7,7 @@
 #include "param.h"
 
 extern s8 ptrS,ptrB;
-
+extern enum {stop,running,ready} state;//车的运动状态
 extern Param * param;
 extern bool g_stop_flag;
 extern float pos_x;
@@ -160,17 +160,29 @@ void cmd_action_func(int argc,char *argv[])
         v = atof(argv[2]);
         yaw = atof(argv[3]);
         //测试底盘电机转动到一定角度
-    }else
-    if (argc == 1)
+    }else if (argc == 1)
     {
         now_pos_ptr = now_pos_ptr->link;
         now_pos = now_pos_ptr->data;
+		x = now_pos->x;
+		y = now_pos->y;
+		END.X = x;
+		END.Y = y;
+		END.ANG = angle;
+		OPEN_Hander = 0;
+		state = ready;
         //跑到下一个点
     }else if (argc == 2){
         no = atoi(argv[1]);
         ptr = list_locate(&param->pos_ptr, no);
         now_pos = ptr->data;
         now_pos_ptr = ptr;
+		x = now_pos->x;
+		y = now_pos->y;
+		END.X = x;
+		END.Y = y;
+		END.ANG = angle;
+		OPEN_Hander = 0;
         //跑到指定的点去
     }else if (argc == 3){
         x = atof(argv[1]);
@@ -180,6 +192,7 @@ void cmd_action_func(int argc,char *argv[])
 		END.Y = y;
 		END.ANG = angle;
 		OPEN_Hander = 0;
+		state = ready;
     }
 	
 }
@@ -192,17 +205,17 @@ void cmd_switch_func(int argc,char *argv[])
     USART_SendString(CMD_USARTx, "roll_switch:%d pitch_switch:%d", state1, state2);
 }
 void cmd_param_func(int argc,char *argv[]){
-	if (strcmp(argv[1],"Speed_max")==0)
+	if (strcmp(argv[1],"speedmax")==0)
 		Speed_max = atoi(argv[2]);
-	else if (strcmp(argv[0],"Speed_min")==0)
+	else if (strcmp(argv[1],"speedmin")==0)
 		Speed_min = atoi(argv[2]);
-	else if (strcmp(argv[1],"Move_speed")==0)
+	else if (strcmp(argv[1],"movespeed")==0)
 		Move_speed = atoi(argv[2]);
-	else if (strcmp(argv[1],"Move_radium")==0)
+	else if (strcmp(argv[1],"moveradium")==0)
 		Move_radium = atof(argv[2]);
-	else if (strcmp(argv[1],"Angle_radium")==0)
+	else if (strcmp(argv[1],"angleradium")==0)
 		Angle_radium = atof(argv[2]);
-	else if (strcmp(argv[1],"Angle_speed")==0)
+	else if (strcmp(argv[1],"anglespeed")==0)
 		Angle_speed = atoi(argv[2]);
 }
 
@@ -224,15 +237,17 @@ void cmd_launch_func(int argc,char *argv[])
 				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f,truespeed,angle);
     }else if (strcmp(argv[1],"start")==0)
     {
-        USART_SendString(UART4,"1v100\r");
+        USART_SendString(UART4,"\rv100\r");
+		USART_SendString(UART4,"\rv100\r");
     }else if (strcmp(argv[1],"stop")==0)
     {
-		WantSpeed = 0;
-        USART_SendString(UART4,"1v0\r");
-
+		//WantSpeed = 0;
+		TIM_SetCompare1(TIM8,7.7/100*1000000/50 - 1);
+        USART_SendString(UART4,"v0\r");
+		USART_SendString(UART4,"v0\r");
     }else if (strcmp(argv[1],"pushstop")==0)
     {
-        USART_SendString(UART4,"1v0\r");
+        USART_SendString(UART4,"v0\r");
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);
@@ -256,6 +271,7 @@ void cmd_launch_func(int argc,char *argv[])
 		END.Y = pos_y;
 		END.ANG = yaw;
 		OPEN_Hander = 0;
+		state = running;
     }else if (strcmp(argv[1], "set")==0)
     {
 		if(strcmp(argv[2], "pitch")==0)
@@ -271,12 +287,14 @@ void cmd_launch_func(int argc,char *argv[])
         }else if(strcmp(argv[2], "speed")==0)
 		{
 			speed = atof(argv[3]);
-			WantSpeed = speed;
+			//WantSpeed = speed;
+			TIM_SetCompare1(TIM8,speed/100*1000000/50 - 1);
 		}else if(strcmp(argv[2], "yaw")==0)
 		{
 			yaw = atof(argv[3]);
 			END.ANG = yaw;
 			OPEN_Hander = 0;
+			state = ready;
         }else if(argc == 6) {
 		//直接调整
 			pitch = atof(argv[2]);
@@ -287,7 +305,8 @@ void cmd_launch_func(int argc,char *argv[])
 			pitch_flag = true;
 			pur_roll = roll;
 			roll_flag = true;
-			Move_speed = speed;
+			//Move_speed = speed;
+			TIM_SetCompare1(TIM8,speed/100*1000000/50 - 1);
 			END.ANG = yaw;
 			OPEN_Hander = 0;
 		}

@@ -25,9 +25,6 @@ void roll_move(float v){
 }
 
 
-
-
-
 void bottons_check(){
 	if (ptrB>-1){
 		b[ptrB]->cnt=20;

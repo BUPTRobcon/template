@@ -3,19 +3,16 @@
 //extern u8 cmd,sticks[4];
 //extern u8 ptr;
 
-
-
 //全局变量定义区
 bool g_stop_flag = false;
 float pos_x,pos_y;
 float angle; 
 int WantSpeed = 0;//飞轮目标速度
+enum {stop,running,ready} state;//车的运动状态
 
 float Default_angle;
 int Chassis_motor2 =0 , Chassis_motor3 =0 , Chassis_motor4 =0 ;
 float CH_angle_M2 = -PI/2 - 2*PI/3 ,CH_angle_M3 = -PI/2 , CH_angle_M4 = -PI/2 + 2*PI/3;
-
-
 
 float Speed_Duty = 770;
 float Speed_P = 0.0030,Speed_D=0.3000 ,Speed_I =0.f;
@@ -35,12 +32,12 @@ float Move_radium,Angle_radium;
 int Speed_min,Speed_max,Angle_speed,Move_speed;
 
 void set_params(){
-	Speed_min = 20;
-	Speed_max = 2000;
+	Speed_min = 30;
+	Speed_max = 6000;
 	Move_radium = 0.00001;
 	Angle_radium = 0.001;
-	Angle_speed = 800;
-	Move_speed = 6000;
+	Angle_speed = 2400;
+	Move_speed = 5000;
 }
 
 void TIM2_IRQHandler(void){
@@ -87,6 +84,8 @@ int main(void)
 	int Hx,Hy;
 	int g_vega_pos_x = 0,g_vega_pos_y= 0;   
 	float g_vega_angle = 0; 
+	int temp_x, temp_y;
+	float temp_angle;
 	
 	float errorAngle ,error_X ,error_Y;
 	float anglebuf =0;
@@ -120,6 +119,7 @@ int main(void)
 //	TIM2_Init();
 	USART_SendString(UART5,"msg: Let's go!\n");
 	
+	set_params();
 	direction_angle = PI/2;
 	START.X = g_vega_pos_x* 0.0001 * 0.81;
 	START.Y = g_vega_pos_y* 0.0001 * 0.81;
@@ -127,6 +127,10 @@ int main(void)
 	OPEN_Hander = 0;
 
 	END = START;
+	state = stop;
+	temp_x = g_vega_pos_x;
+	temp_y = g_vega_pos_y;
+	temp_angle = g_vega_angle;
 
     while(1) 
 	{
@@ -135,8 +139,8 @@ int main(void)
 			USART_SendString(USART2,"0v0\r2v0\r");
 			USART_SendString(UART4,"1v0\r");
 		}else{
-			bottons_check();
-			sticks_check(Hx,Hy);
+			//bottons_check();
+			//sticks_check(Hx,Hy);
 			pos_x = g_vega_pos_x* 0.0001 * 0.81;
 			pos_y = g_vega_pos_y* 0.0001 * 0.81;
 			angle = (g_vega_angle/180.f)*PI;
@@ -144,35 +148,73 @@ int main(void)
 			ChassisSpeed= Move_speed;		
 			if(OPEN_Hander ==0){
 				/**-------------------------自动部分--------------------------------**/		
-				errorAngle = angle - END.ANG;
-				error_X = END.X - pos_x;
-				error_Y = END.Y - pos_y;
+				if(state == ready){
+					/*vega_set_angle(temp_angle);
+					vega_set_pos(temp_x, temp_y);
+					g_vega_angle = temp_angle;
+					g_vega_pos_x = temp_x;
+					g_vega_pos_y = temp_y;
+					pos_x = g_vega_pos_x* 0.0001 * 0.81;
+					pos_y = g_vega_pos_y* 0.0001 * 0.81;
+					angle = (g_vega_angle/180.f)*PI;*/
+					state = running;
+				}
+				if(state == running){
+					errorAngle = angle - END.ANG;
+					error_X = END.X - pos_x;
+					error_Y = END.Y - pos_y;
+				
+					if((powf(error_X,2)+powf(error_Y,2))>1)
+						ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
+					else 
+						ChassisSpeed = sqrt(sqrt(powf(error_X,2)+powf(error_Y,2)))*Move_speed;
+					if(ChassisSpeed>Speed_max)
+						ChassisSpeed = Speed_max;
+					if(ChassisSpeed<Speed_min && ChassisSpeed>0)
+						ChassisSpeed = Speed_min;
+					
+					if(errorAngle >= 0.05 && errorAngle < 2){          //角度调整
+						TURN_speed =-Angle_speed*errorAngle;
+					}else if(errorAngle <=-0.05 && errorAngle > -2){
+						TURN_speed =-Angle_speed*errorAngle;
+					}else if(errorAngle > Angle_radium && errorAngle < 0.05)
+					{
+						TURN_speed = -Angle_speed*errorAngle;
+					}
+					else if(errorAngle < -Angle_radium && errorAngle > -0.05)
+					{
+						TURN_speed = -Angle_speed*errorAngle;
+					}else if(errorAngle>=2){
+						TURN_speed =-Angle_speed*2;
+					}else if(errorAngle<=-2){
+						TURN_speed =-Angle_speed*(-2);
+					}else{
+						TURN_speed= 0;
+					}
+					
+					if(powf(error_X,2)+powf(error_Y,2) <= Move_radium){//已经到达
+						ChassisSpeed = 0;
+					}else{
+						direction_angle = atan2(error_Y,error_X);
+					}
 			
-				ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
-				if(ChassisSpeed>Speed_max)
-					ChassisSpeed = Speed_max;
-				if(ChassisSpeed<Speed_min && ChassisSpeed>0)
-					ChassisSpeed = Speed_min;
-				
-				if(errorAngle > Angle_radium){          //角度调整
-					TURN_speed =-Angle_speed*errorAngle;
-				}else if(errorAngle <-Angle_radium){
-					TURN_speed =-Angle_speed*errorAngle;
-				}else{
-					TURN_speed= 0;
+					Chassis_motor3 = -1* (ChassisSpeed*cos((CH_angle_M3 +angle -START.ANG) - direction_angle)+TURN_speed);//Y轴方向，这里direction_angle代表小车相对于场地坐标系的方向
+					Chassis_motor4 =      ChassisSpeed*cos((CH_angle_M4 +angle -START.ANG)- direction_angle)+TURN_speed;
+					Chassis_motor2 = -1* (ChassisSpeed*cos((CH_angle_M2 +angle -START.ANG) - direction_angle)+TURN_speed);
+					temp_x = g_vega_pos_x;
+					temp_y = g_vega_pos_y;
+					temp_angle = g_vega_angle;
+					if(fabs(Chassis_motor2) < 1e-6 && fabs(Chassis_motor4) < 1e-6 && fabs(Chassis_motor3) < 1e-6){
+						USART_SendString(MOTOR_USARTx,"2v0\r3v0\r4v0\r");
+						state = stop;
+					}else{
+						USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
+					}
+				}else if(state == stop){
+					/*pos_x = temp_x* 0.0001 * 0.81;
+					pos_y = temp_y* 0.0001 * 0.81;
+					angle = (temp_angle/180.f)*PI;*/
 				}
-				
-				if(powf(error_X,2)+powf(error_Y,2) <= Move_radium){//已经到达
-					ChassisSpeed = 0;
-				}else{
-					direction_angle = atan2(error_Y,error_X);
-				}
-		
-				
-				Chassis_motor3 = -1* (ChassisSpeed*cos((CH_angle_M3 +angle -START.ANG) - direction_angle)+TURN_speed);//Y轴方向，这里direction_angle代表小车相对于场地坐标系的方向
-				Chassis_motor4 =      ChassisSpeed*cos((CH_angle_M4 +angle -START.ANG)- direction_angle)+TURN_speed;
-				Chassis_motor2 = -1* (ChassisSpeed*cos((CH_angle_M2 +angle -START.ANG) - direction_angle)+TURN_speed);
-				USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
 			}else if(OPEN_Hander ==1){
 						/********手柄部分***********/
 				errorAngle = angle - START.ANG;

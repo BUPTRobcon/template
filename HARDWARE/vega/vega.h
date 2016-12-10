@@ -25,6 +25,7 @@ typedef union{
 
 int vega_init(int *p_pos_x,int *p_pos_y,float *angle);
 int vega_set_angle(float angle);
+int vega_set_pos(int pos_x,int pos_y);
 int vega_reset(void);
 
 

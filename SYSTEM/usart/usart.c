@@ -30,8 +30,8 @@ void usart_init(int *Hx,int *Hy){
    
 	USART_Init(USART1, &USART_InitStructure); //初始化串口1
     USART_Cmd(USART1, ENABLE);  //使能串口1
-	USART_Init(USART2, &USART_InitStructure); //初始化串口1
-    USART_Cmd(USART2, ENABLE);  //使能串口1
+	USART_Init(USART2, &USART_InitStructure); //初始化串口2
+    USART_Cmd(USART2, ENABLE);  //使能串口2
 	USART_Init(UART5, &USART_InitStructure); //初始化串口5
     USART_Cmd(UART5, ENABLE);  //使能串口5
 	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);//开启相关中断
@@ -40,7 +40,7 @@ void usart_init(int *Hx,int *Hy){
 		
 	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);//开启相关中断
 	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-	
+	USART_InitStructure.USART_BaudRate = 9600;//波特率设置
 	USART_Init(UART4, &USART_InitStructure); //初始化串口4
     USART_Cmd(UART4, ENABLE);  //使能串口4
 	x=Hx;y=Hy;

@@ -26,7 +26,7 @@ void encoder_callback(CanRxMsg *can_rx_msg){
             temp.u8_form[1] = can_rx_msg->Data[1];
             temp.u8_form[2] = can_rx_msg->Data[2];
             temp.u8_form[3] = can_rx_msg->Data[3];
-            memcpy((void*)&(Which->GetTim1),&temp.s32_form,4);
+            memcpy((void*)&Which->GetTim1,&temp.s32_form,4);
 			break;
 		case encoder_canID3:
 			temp.u8_form[0] = can_rx_msg->Data[0];
@@ -47,7 +47,7 @@ void encoder_callback(CanRxMsg *can_rx_msg){
             temp.u8_form[1] = can_rx_msg->Data[1];
             temp.u8_form[2] = can_rx_msg->Data[2];
             temp.u8_form[3] = can_rx_msg->Data[3];
-            memcpy(&(Which->GetTim5),&temp.s32_form,4);
+            memcpy((void*)&Which->GetTim5,&temp.s32_form,4);
 			break;
 		case encoder_canID8:
 			temp.u8_form[0] = can_rx_msg->Data[0];
@@ -63,6 +63,7 @@ void encoder_callback(CanRxMsg *can_rx_msg){
 /**
 *设置使用哪个定时器
 * 可用TIM1，TIM3，TIM4，TIM5,TIM8
+* S为1时为速度模式，2为位置模式
 *即参数设1,3,5,4,5,8.其他无效
 */
 void SetUsed(u8 N, u8 S){

@@ -18,7 +18,7 @@ float pur_pitch,pur_roll;
 bool roll_flag=false,pitch_flag=false;
 
 struct {
-	int d,dd,d_last,now;
+	float d,dd,d_last,now;
 	int cnt;
 }pitch,roll;
 

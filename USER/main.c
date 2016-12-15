@@ -11,7 +11,7 @@ enum {load_ready, load_up, load_catch, load_down, load_turn, load_wait} load_sta
 enum {hit_ready, hit_pull, hit_put, hit_push, hit_wait} hit_state;//击打机构的状态
 
 bool hit_flag = false;
-int pitch_count, load_count, hit_count;
+int load_count, hit_count;
 float pull_pos = 10;
 
 bool g_stop_flag = false;
@@ -83,8 +83,6 @@ void TIM2_IRQHandler(void){
 			 if (b[i]->cnt==0)
 				 b[i]->ispressed=false;
 		 }
-		 if(pitch_count)
-			pitch_count--;
 		 if(load_count)
 			load_count--;
 		 if(hit_count)
@@ -101,6 +99,9 @@ int main(void)
 	// RCC->CFGR |= RCC_CFGR_PPRE2_DIV2; APHB1_CLK 84MHZ
 	//AHB 168MHZ  APB2 84MHZ  APB1 42MHZ
 
+	int hit_flag_count = 0;
+	int temp_speed = 0;
+	
 	extern int TIM3_round, TIM4_round;
 	int Hx, Hy;
 	
@@ -137,16 +138,19 @@ int main(void)
 	can_init();
     vega_init(&g_vega_pos_x,&g_vega_pos_y,&g_vega_angle);
     vega_reset();
+	delay_ms(1000);
 	encoder_init(&encoder);
 	SetUsed(4,1);
-	delay_ms(4000);
+	delay_ms(1000);
+	SetUsed(3,1);
+	delay_ms(1000);
+	SetUsed(5,2);
+	delay_ms(1000);
 	SetTime(5);
 	TIM2_Init();
 	USART_SendString(UART5,"msg: Let's go!\n");
 	
 	USART_SendString(MOTOR_USARTx,"5HO\r6HO\r");
-	USART_SendString(MOTOR_USARTx,"5SP10000\r5AC1000\r5DEC1000\r");
-
 	set_params();
 	direction_angle = PI/2;
 	START.X = g_vega_pos_x* 0.0001 * 0.81;
@@ -164,8 +168,11 @@ int main(void)
 		if(g_stop_flag){//停止一切运动
 			USART_SendString(MOTOR_USARTx,"0v0\r1v0\r2v0\r");
 			USART_SendString(MOTOR_USARTx,"3v0\r4v0\r");
-			//USART_SendString(MOTOR_USARTx,"5v0\r6v0\r");
+			USART_SendString(MOTOR_USARTx,"5v0\r6v0\r");
 		}else{
+			//if((encoder.GetTim5-temp_speed)!=0)
+			//	USART_SendString(UART5,"msg: %d\n",encoder.GetTim5);
+			temp_speed = encoder.GetTim5;
 			bottons_check();
 			sticks_check(Hx,Hy);
 			pos_x = g_vega_pos_x* 0.0001 * 0.81;
@@ -176,24 +183,32 @@ int main(void)
 			Step_check();
 			if(OPEN_Hander ==0){
 				/**-------------------------自动部分--------------------------------**/		
-				/*switch(pitch_state){
+				switch(pitch_state){
 					case pitch_ready:
 						if(hit_flag){
 							pitch_state = pitch_up;
+							hit_flag_count = 0;
 							pitch_flag = true;
-							pitch_count = 2000;
+							pur_pitch = 5;
+							//USART_SendString(bluetooth,"msg: pitch_up\r");
 						}
 						break;
 					case pitch_up:
-						if(pitch_count == 0){
+						if(pitch_flag == false){
 							pitch_state = pitch_wait;
+							//USART_SendString(bluetooth,"msg: pitch_wait\r");
+							hit_flag_count++;
 						}
 						break;
 					case pitch_wait:
-						if(load_state == load_wait && hit_state == hit_wait)
+						if(hit_flag_count == 3)
+						{
+							hit_flag = false;
 							pitch_state = load_ready;
+							//USART_SendString(bluetooth,"msg: pitch_ready\r");
+						}
 						break;
-				}*/
+				}
 				
 				switch(load_state){
 					case load_ready:
@@ -201,6 +216,7 @@ int main(void)
 							load_state = load_up;
 							PGout(12) = 1;
 							load_count = 100;
+							//USART_SendString(bluetooth,"msg: load_up\r");
 						}
 						break;
 					case load_up:
@@ -209,71 +225,88 @@ int main(void)
 							PGout(13) = 1;
 							TIM_SetCompare2(TIM9,1800);
 							load_count = 100;
+							//USART_SendString(bluetooth,"msg: load_catch\r");
 						}
 						break;
 					case load_catch:
 						if(load_count == 0){
 							load_state = load_down;
 							PGout(12) = 0;
-							load_count = 1000;
+							load_count = 100;
+							//USART_SendString(bluetooth,"msg: load_down\r");
 						}
 						break;
 					case load_down:
 						if(load_count == 0){
 							load_state = load_turn;
 							Step1_moveto(Step1_get_count()+4080);
-							Step2_moveto(500);
+							//USART_SendString(bluetooth,"msg: load_turn\r");
 						}
 						break;
 					case load_turn:
-						if(Step1_state)
+						if(Step1_state()){
 							load_state = load_wait;
+							//USART_SendString(bluetooth,"msg: load_wait\r");
+							hit_flag_count++;
+						}
 						break;
 					case load_wait:
-						if(pitch_state == pitch_wait && hit_state == hit_wait)
+						if(hit_flag_count == 3)
+						{
 							load_state = load_ready;
+							//USART_SendString(bluetooth,"msg: load_ready\r");
+						}
 						break;
 				}
 				
-				/*switch(hit_state){
+				switch(hit_state){
 					case hit_ready:
 						if(hit_flag && load_state == load_turn)
 						{	
-							USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(pull_pos*10000));
-							USART_SendString(MOTOR_USARTx,"5M\r");
-							hit_count = 2000;
+							Step2_moveto(3000);
+							USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(0*10000));
+							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+							hit_count = 1000;
+							hit_state = hit_pull;
+							//USART_SendString(bluetooth,"msg: hit_pull\r");
 						}
 						break;
 					case hit_pull:
-						if(hit_count == 0 && Step2_state){
+						if(hit_count == 0 && Step2_state()){
 							hit_state = hit_put;
 							TIM_SetCompare2(TIM9,1060);
-							hit_count = 1000;
+							hit_count = 100;
+							USART_SendString(bluetooth,"msg: hit_put%d\n",Step2_get_count());
 						}
 						break;
 					case hit_put:
 						if(hit_count == 0 && pitch_state == pitch_wait)
 						{
 							PGout(13) = 0;
-							hit_count = 2000;
-							USART_SendString(MOTOR_USARTx,"5LA35000\r");
-							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+							hit_count = 1000;
 							Step2_moveto(0);
+							USART_SendString(MOTOR_USARTx,"5LA340000\r");
+							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
 							hit_state = hit_push;
-							PGout(13) = 1;
+							//USART_SendString(bluetooth,"msg: hit_push\r");
 						}
 						break;
 					case hit_push:
-						if(hit_count == 0 && Step2_state)
+						if(hit_count == 0 && Step2_state())
 						{
 							hit_state = hit_wait;
+							USART_SendString(bluetooth,"msg: hit_wait%d\n",Step2_get_count());
+							hit_flag_count++;
 						}
 						break;
 					case hit_wait:
-						if(pitch_state == pitch_wait && load_state == load_wait)
+						if(hit_flag_count == 3)
+						{
 							hit_state = hit_ready;
+							//USART_SendString(bluetooth,"msg: hit_ready\r");
+						}
 						break;
-				}*/
+				}
 				
 				if(car_state == car_ready){
 					START.X = g_vega_pos_x* 0.0001 * 0.81;
@@ -314,28 +347,29 @@ int main(void)
 					if(ChassisSpeed>Speed_max)
 						ChassisSpeed = Speed_max;
 					
-					if(errorAngle >= Angle_radium && errorAngle < 1)
+					if(errorAngle >= 0.05 && errorAngle < 2)
 					{          //角度调整
-						TURN_speed = -1*sqrt(errorAngle)*Angle_speed;
+						TURN_speed = -1*Angle_speed*errorAngle;
 					}
-					else if(errorAngle <=-1*Angle_radium && errorAngle > -1)
+					else if(errorAngle <=-0.05 && errorAngle > -2)
 					{
-						TURN_speed = -1*sqrt(errorAngle)*Angle_speed;
-					}else if(errorAngle >= 1 && errorAngle < 2)
-					{          //角度调整
-						TURN_speed = -1*errorAngle*Angle_speed;
+						TURN_speed = -1*Angle_speed*errorAngle;
 					}
-					else if(errorAngle <=-1 && errorAngle > -2)
+					else if(errorAngle > Angle_radium && errorAngle < 0.05)
 					{
-						TURN_speed = -1*errorAngle*Angle_speed;
+						TURN_speed = -1*Angle_speed*errorAngle;
+					}
+					else if(errorAngle < -1*Angle_radium && errorAngle > -0.05)
+					{
+						TURN_speed = -1*Angle_speed*errorAngle;
 					}
 					else if(errorAngle>=2)
 					{
-						TURN_speed =-1*2*Angle_speed;
+						TURN_speed =-1*Angle_speed*2;
 					}
 					else if(errorAngle<=-2)
 					{
-						TURN_speed =-1*(-2)*Angle_speed;
+						TURN_speed =-1*Angle_speed*(-2);
 					}
 					else
 					{
@@ -355,7 +389,7 @@ int main(void)
 					Chassis_motor1 = -1*(ChassisSpeed * cos((CH_angle_M1 +angle) - direction_angle) + TURN_speed);
 					Chassis_motor2 = (ChassisSpeed * cos((CH_angle_M2 +angle) - direction_angle) + TURN_speed);
 					
-					if(fabs(Chassis_motor2) < 5 && fabs(Chassis_motor1) < 5 && fabs(Chassis_motor0) < 5)
+					if(fabs(Chassis_motor2) < 1 && fabs(Chassis_motor1) < 1 && fabs(Chassis_motor0) < 1)
 					{
 						USART_SendString(MOTOR_USARTx,"2v0\r1v0\r0v0\r");
 						car_state = car_stop;
@@ -382,7 +416,7 @@ int main(void)
 				/********手柄部分***********/
 				//USART_SendString(CMD_USARTx,"Ohi\n");
 				errorAngle = angle;
-				TURN_speed = 0;Xianding = 0;
+				Xianding = 0;
 				if (RU.ispressed)
 				{ PGout(11) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_11);
 					USART_SendString(bluetooth,"msg: RU is pressed\n");
@@ -400,17 +434,6 @@ int main(void)
 					else TIM_SetCompare2(TIM9,1060);
 					USART_SendString(bluetooth,"msg: RL is pressed\n");
 				}
-//				if (LR.ispressed){
-//					TIM13->CCER |= TIM_CCER_CC1E;
-//					PFout(4) = 0;
-//				}else				
-//				if (LL.ispressed){
-//					TIM13->CCER |= TIM_CCER_CC1E;
-//					PFout(4) = 1;
-//				}else{ 
-//					//USART_SendString(bluetooth,"msg: 000!\n");
-//					TIM13->CCER &= ~TIM_CCER_CC1E;
-//				}
 				if (L2.ispressed) {
 					if (LU.ispressed){
 						TIM14->CCER |= TIM_CCER_CC1E;
@@ -493,36 +516,37 @@ int main(void)
 			
 			if (pitch_flag)
 			{
-				pitch.now = encoder.GetTim3;
+				pitch.now = -encoder.GetTim3 / 10000.f;
 				pitch.d = pur_pitch - pitch.now;
 				pitch.dd = pitch.d - pitch.d_last;
 				pitch.d_last = pitch.d;
-				if (fabs(pitch.d) < 10)
+				if (fabs(pitch.d) < 0.01)
 				{
 					if (pitch.cnt > 10)
 					{
-						pitch_flag=false;
 						pitch_move(0);
+						pitch.cnt = 0;
+						pitch_flag=false;
 					}
 					else
 					{
 						pitch.cnt++;
-						pitch_move(pitch.d * 30 + pitch.dd * 15);
+						pitch_move(pitch.d * 1000 + pitch.dd * 800);
 					}
 				}
 				else
 				{
 					pitch.cnt = 0;
-					pitch_move(pitch.d * 30 + pitch.dd * 15);
+					pitch_move(pitch.d * 1000 + pitch.dd * 800);
 				}
 			}
 			if (roll_flag)
 			{
-				roll.now = encoder.GetTim4;
+				roll.now = encoder.GetTim4 / 10000.f;
 				roll.d = pur_roll - roll.now;
 				roll.dd = roll.d - roll.d_last;
 				roll.d_last = roll.d;
-				if (fabs(roll.d) < 10)
+				if (fabs(roll.d) < 0.01)
 				{
 					if (roll.cnt > 10)
 					{
@@ -532,13 +556,13 @@ int main(void)
 					else
 					{
 						roll.cnt++;
-						roll_move(roll.d * 30 + roll.dd * 15);
+						roll_move(roll.d * 1000 + roll.dd * 800);
 					}
 				}
 				else
 				{
 					roll.cnt=0;
-					roll_move(roll.d * 30 + roll.dd * 15);
+					roll_move(roll.d * 1000 + roll.dd * 800);
 				}
 			}	
 		}

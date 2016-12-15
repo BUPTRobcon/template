@@ -190,6 +190,9 @@ void gpio_config(void)
 
 	GPIO_Configuration(GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13,GPIO_Mode_OUT,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_DOWN,GPIOG);
 //----------------------------¼ÌµçÆ÷-----------------------------------------------------------------------------	
+
+	GPIO_Configuration(GPIO_Pin_1|GPIO_Pin_4, GPIO_Mode_OUT,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOD);
+//----------------------------LED-----------------------------------------------------------------------------	
 }
 
 /*

@@ -9,11 +9,11 @@ extern sticks* s[];
 
 
 void pitch_move(float v){
-	if (v - 1200.f > 0.0000001)
-		v = 1200;
-	else if (v + 1200.f < 0.0000001)
-		v=-1200;
-	USART_SendString(UART4,"3v%d\r",(int)v);
+	if (v - 3000.f > 0.0000001)
+		v = 3000;
+	else if (v + 3000.f < 0.0000001)
+		v=-3000;
+	USART_SendString(UART4,"3v%d\r3v%d\r3v%d\r",(int)v);
 }
 
 void roll_move(float v){
@@ -21,7 +21,7 @@ void roll_move(float v){
 		v = 1200;
 	else if (v + 1200.f < 0.0000001)
 		v=-1200;
-	USART_SendString(UART4,"4v%d\r",-(int)v);
+	USART_SendString(UART4,"4v%d\r4v%d\r4v%d\r",(int)v);
 }
 
 

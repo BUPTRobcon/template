@@ -270,8 +270,8 @@ void cmd_launch_func(int argc,char *argv[])
     }else if (strcmp(argv[1], "now")==0)
     {
         //·¢Éä²ÎÊý
-        USART_SendString(CMD_USARTx, "pitch:%d roll:%d speed:%.6f yaw:%.6f\n",
-				encoder.GetTim3,encoder.GetTim4,speed,angle);
+        USART_SendString(CMD_USARTx, "pitch:%f roll:%f speed:%d yaw:%.6f\n",
+				-encoder.GetTim3/10000.f,encoder.GetTim4/10000.f,encoder.GetTim5,angle);
     }else if (strcmp(argv[1],"start")==0)
     {
        
@@ -311,11 +311,13 @@ void cmd_launch_func(int argc,char *argv[])
     {
 		if(strcmp(argv[2], "pitch")==0)
 		{
+			OPEN_Hander = 0;
 			pitch = atof(argv[3]);//0-100
 			pur_pitch = pitch;
 			pitch_flag = true;
 		}else if(strcmp(argv[2], "roll")==0)
 		{
+			OPEN_Hander = 0;
 			roll = atof(argv[3]);
 			pur_roll = roll;
 			roll_flag = true;

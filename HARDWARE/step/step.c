@@ -60,6 +60,7 @@ void Step_check(void)
 		{
 			if(state1 == 0){
 				PFout(4) = 1;
+				PDout(1) = 1;
 				TIM13->CCER |= TIM_CCER_CC1E;
 				state1 = 1;
 			}
@@ -67,6 +68,7 @@ void Step_check(void)
 		{
 			if(state1 == 0){
 				PFout(4) = 0;
+				PDout(1) = 0;
 				TIM13->CCER |= TIM_CCER_CC1E;
 				state1 = 1;
 			}
@@ -84,6 +86,7 @@ void Step_check(void)
 		{
 			if(state2 == 0){
 				PFout(5) = 0;
+				PDout(4) = 0;
 				TIM14->CCER |= TIM_CCER_CC1E;
 				state2 = 1;
 			}
@@ -91,6 +94,7 @@ void Step_check(void)
 		{
 			if(state2 == 0){
 				PFout(5) = 1;
+				PDout(4) = 1;
 				TIM14->CCER |= TIM_CCER_CC1E;
 				state2 = 1;
 			}

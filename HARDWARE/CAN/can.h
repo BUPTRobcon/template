@@ -33,6 +33,9 @@
  *          
  *          
  */
+#ifndef __CAN_H
+#define __CAN_H
+
 
 #include "sys.h"
 #define CAN_SELECT 1    //1 则使用CAN1 2则使用CAN2 
@@ -81,3 +84,6 @@ void can_nvic_config(void);
 int can_send_msg(u8 can_id,u8 *msg,u8 len);  //发送邮箱
 int can_rcv_msg(void);   //接收信息
 int can_add_callback(u8 can_id,void *msg_rcv_callback_func);
+#endif
+
+

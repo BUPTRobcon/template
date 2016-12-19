@@ -13,7 +13,7 @@ void pitch_move(float v){
 		v = 1200;
 	else if (v + 1200.f < 0.0000001)
 		v=-1200;
-	USART_SendString(USART2,"3v%d\r",(int)v);
+	USART_SendString(UART4,"3v%d\r",(int)v);
 }
 
 void roll_move(float v){
@@ -21,13 +21,15 @@ void roll_move(float v){
 		v = 1200;
 	else if (v + 1200.f < 0.0000001)
 		v=-1200;
-	USART_SendString(USART2,"0v%d\r",-(int)v);
+	USART_SendString(UART4,"4v%d\r",-(int)v);
 }
 
 
 void bottons_check(){
 	if (ptrB>-1){
-		b[ptrB]->cnt=20;
+		if (ptrB>=4&ptrB<=7)
+			b[ptrB]->cnt=4;
+		else b[ptrB]->cnt=50;
 		b[ptrB]->ispressed=true;
 		ptrB=-1;
 	}

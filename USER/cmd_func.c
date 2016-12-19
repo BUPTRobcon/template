@@ -46,6 +46,22 @@ void cmd_hello_func(int argc,char *argv[]){
     USART_SendString(CMD_USARTx, "msg: Hello World\n");
 }
 
+void cmd_test_func(int argc,char *argv[]){
+	if(argc == 2){
+		TIM_SetCompare2(TIM9,200*atof(argv[1])-1);
+		USART_SendString(CMD_USARTx, "msg: Time for degugging\n");
+	}else if(argc == 3){
+		if(strcmp(argv[1],"air") == 0)
+		{
+			if(strcmp(argv[2],"1") == 0){
+				PGout(12) = !PGout(12);
+			}else if(strcmp(argv[2],"2") == 0){
+				PGout(11) = !PGout(11);
+			}
+		}
+	}
+}
+
 void cmd_pos_func(int argc,char *argv[])
 {
     int no;
@@ -288,7 +304,7 @@ void cmd_launch_func(int argc,char *argv[])
 		{
 			speed = atof(argv[3]);
 			//WantSpeed = speed;
-			TIM_SetCompare1(TIM8,speed/100*1000000/50 - 1);
+			TIM_SetCompare1(TIM9,speed/100*1000000/50 - 1);
 		}else if(strcmp(argv[2], "yaw")==0)
 		{
 			yaw = atof(argv[3]);

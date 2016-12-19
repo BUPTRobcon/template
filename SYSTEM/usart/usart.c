@@ -34,13 +34,13 @@ void usart_init(int *Hx,int *Hy){
     USART_Cmd(USART2, ENABLE);  //使能串口2
 	USART_Init(UART5, &USART_InitStructure); //初始化串口5
     USART_Cmd(UART5, ENABLE);  //使能串口5
-	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);//开启相关中断
 	USART_Init(USART3, &USART_InitStructure); //初始化串口3
     USART_Cmd(USART3, ENABLE);  //使能串口3
 		
 	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);//开启相关中断
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-	USART_InitStructure.USART_BaudRate = 9600;//波特率设置
+	USART_InitStructure.USART_BaudRate = 115200;//波特率设置
 	USART_Init(UART4, &USART_InitStructure); //初始化串口4
     USART_Cmd(UART4, ENABLE);  //使能串口4
 	x=Hx;y=Hy;
@@ -54,6 +54,16 @@ void USART3_IRQHandler(void)
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) 
 	{
 		Res =USART_ReceiveData(USART3);
+	
+	}
+}
+
+void USART1_IRQHandler(void)                	
+{
+	u8 Res;	u8 tmp;
+	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) 
+	{
+		Res =USART_ReceiveData(USART1);
 		if (Res==0x0d&&ptrS<0) {
 			ptrS=-ptrS;
 			return;

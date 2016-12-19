@@ -11,12 +11,13 @@
 #include "vega.h"
 #include "math.h"
 #include "global.h"
+#include "encoder.h"
 
 float pur_pitch,pur_roll;
 bool roll_flag=false,pitch_flag=false;
 
 struct {
-	float d,dd,d_last,now;
+	int d,dd,d_last,now;
 	int cnt;
 }pitch,roll;
 

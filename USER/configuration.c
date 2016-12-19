@@ -111,6 +111,7 @@ void system_clk_set(void){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOG, ENABLE);
                                                             //配置事件控制寄存器/外部中断控制寄存器/重映射时必须开启AFIO时钟，而开管脚的默认外设功能并不需要开AFIO时钟（没有重映射）
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);	 //使能USART1时钟
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE); 
@@ -123,7 +124,7 @@ void system_clk_set(void){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
-	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
 }
 
 void gpio_config(void)
@@ -132,10 +133,10 @@ void gpio_config(void)
 	//GPIO_PinRemapConfig(GPIO_Remap_USART1,ENABLE);   //?
 	//GPIO_PinRemapConfig(GPIO_Remap_USART2,ENABLE);   //?
 	//GPIO_PinRemapConfig(GPIO_Remap_USART3,ENABLE);   //?
-	GPIO_Configuration(GPIO_Pin_6 | GPIO_Pin_7,GPIO_Mode_AF,
-	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOB);
-	GPIO_PinAFConfig(GPIOB,GPIO_PinSource6,GPIO_AF_USART1); //GPIOB6复用为USART1
-	GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_USART1); //GPIOB7复用为USART1
+	GPIO_Configuration(GPIO_Pin_9 | GPIO_Pin_10,GPIO_Mode_AF,
+	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOA);
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1); //GPIOA9复用为USART1
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1); //GPIOA10复用为USART1
 	
 	GPIO_Configuration(GPIO_Pin_5 | GPIO_Pin_6,GPIO_Mode_AF,
 	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOB);
@@ -156,7 +157,6 @@ void gpio_config(void)
 	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
 	GPIO_PinAFConfig(GPIOC,GPIO_PinSource10,GPIO_AF_UART4); //GPIOB6复用为USART4
 	GPIO_PinAFConfig(GPIOC,GPIO_PinSource11,GPIO_AF_UART4); //GPIOB7复用为USART4
-	
 //----------------------------USART---------------------------------------------------------------------------------------------	
 //	GPIO_Configuration(GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15,
 //	                   GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOB);
@@ -180,10 +180,13 @@ void gpio_config(void)
 	GPIO_Configuration(GPIO_Pin_14,GPIO_Mode_IN,GPIO_OType_OD,GPIO_Speed_100MHz,GPIO_PuPd_UP,GPIOE);*/
 //----------------------------触碰开关---------------------------------------------------------------------------------------------
 	
-	GPIO_Configuration(GPIO_Pin_6, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM8);
+	GPIO_Configuration(GPIO_Pin_5|GPIO_Pin_6, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOE);
+	GPIO_PinAFConfig(GPIOE, GPIO_PinSource6, GPIO_AF_TIM9);
+	GPIO_PinAFConfig(GPIOE, GPIO_PinSource5, GPIO_AF_TIM9);
 //----------------------------PWM---------------------------------------------------------------------------------------------
-	
+
+	GPIO_Configuration(GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13,GPIO_Mode_OUT,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_DOWN,GPIOG);
+//----------------------------继电器-----------------------------------------------------------------------------
 }
 
 /*
@@ -226,8 +229,9 @@ void nvic_config()
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2 2:2   抢占：响应    共 3级:3级
 	
 	NVIC_Configuration(UART5_IRQn,2,3,ENABLE);
+	NVIC_Configuration(USART1_IRQn,2,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
-//	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
+	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
 	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
 	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
 //	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);

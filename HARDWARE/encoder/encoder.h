@@ -25,5 +25,5 @@ typedef union{
 
 void encoder_init(SwitchTIM* W);
 void encoder_callback();
-void SetUsed(u8 N);
+void SetUsed(u8 N, u8 S);
 void SetTime(u8 T);

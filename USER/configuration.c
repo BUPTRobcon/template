@@ -8,7 +8,7 @@ EXTI_InitTypeDef exti_init_structure;
 
 float direction_angle = 90;
 //int WANTSPEED = 8000;
-u8 OPEN_Hander = 1;
+u8 OPEN_Hander = 0;
 
 
 
@@ -153,7 +153,7 @@ void gpio_config(void)
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource8,GPIO_AF_USART3); //GPIOD8复用为USART3
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource9,GPIO_AF_USART3); //GPIOD9复用为USART3
 	
-		GPIO_Configuration(GPIO_Pin_10 | GPIO_Pin_11,GPIO_Mode_AF,
+	GPIO_Configuration(GPIO_Pin_10 | GPIO_Pin_11,GPIO_Mode_AF,
 	                   GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOC);
 	GPIO_PinAFConfig(GPIOC,GPIO_PinSource10,GPIO_AF_UART4); //GPIOB6复用为USART4
 	GPIO_PinAFConfig(GPIOC,GPIO_PinSource11,GPIO_AF_UART4); //GPIOB7复用为USART4
@@ -183,10 +183,13 @@ void gpio_config(void)
 	GPIO_Configuration(GPIO_Pin_5|GPIO_Pin_6, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOE);
 	GPIO_PinAFConfig(GPIOE, GPIO_PinSource6, GPIO_AF_TIM9);
 	GPIO_PinAFConfig(GPIOE, GPIO_PinSource5, GPIO_AF_TIM9);
+	GPIO_Configuration(GPIO_Pin_8|GPIO_Pin_9, GPIO_Mode_AF,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_UP,GPIOF);
+	GPIO_PinAFConfig(GPIOF, GPIO_PinSource8, GPIO_AF_TIM13);
+	GPIO_PinAFConfig(GPIOF, GPIO_PinSource9, GPIO_AF_TIM14);
 //----------------------------PWM---------------------------------------------------------------------------------------------
 
 	GPIO_Configuration(GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13,GPIO_Mode_OUT,GPIO_OType_PP,GPIO_Speed_50MHz,GPIO_PuPd_DOWN,GPIOG);
-//----------------------------继电器-----------------------------------------------------------------------------
+//----------------------------继电器-----------------------------------------------------------------------------	
 }
 
 /*
@@ -232,8 +235,8 @@ void nvic_config()
 	NVIC_Configuration(USART1_IRQn,2,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
 	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);
-	NVIC_Configuration(TIM3_IRQn,1,1,ENABLE);
-	NVIC_Configuration(TIM4_IRQn,1,1,ENABLE);
+	NVIC_Configuration(TIM8_UP_TIM13_IRQn,1,1,ENABLE);
+	NVIC_Configuration(TIM8_TRG_COM_TIM14_IRQn,1,1,ENABLE);
 //	NVIC_Configuration(TIM5_IRQn,1,1,ENABLE);
 //	NVIC_Configuration(EXTI15_10_IRQn, 0, 0, ENABLE);
 

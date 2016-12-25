@@ -4,22 +4,30 @@
 //extern u8 cmd, sticks[4];
 //extern u8 ptr;
 
-enum {stop, running, ready} state;//车的运动状态
-
 //全局变量定义区
+enum {car_stop, car_running, car_ready} car_state;//车的运动状态
+enum {pitch_ready, pitch_up, pitch_wait} pitch_state;//俯仰角的状态
+enum {load_ready, load_up, load_catch, load_down, load_turn, load_wait} load_state;//送料机构的状态
+enum {hit_ready, hit_pull, hit_put, hit_push, hit_wait} hit_state;//击打机构的状态
+
+bool hit_flag = false;
+int pitch_count, load_count, hit_count;
+float pull_pos = 10;
+
 bool g_stop_flag = false;
 float pos_x,pos_y;
 float angle; 
 int WantSpeed = 0;//飞轮目标速度
 
 float Default_angle;
-int Chassis_motor2 =0 , Chassis_motor3 =0 , Chassis_motor4 =0 ;
-float CH_angle_M2 = -PI/2 - 2*PI/3, CH_angle_M3 = -PI/2, CH_angle_M4 = -PI/2 + 2*PI/3;
+int Chassis_motor0 =0 , Chassis_motor1 =0 , Chassis_motor2 =0 ;
+float CH_angle_M0 = -PI + 2*PI/3, CH_angle_M1 = -PI - 2*PI/3, CH_angle_M2 = -PI;
 
 float Speed_Duty = 770;
 float Speed_P = 0.0030, Speed_D = 0.3000 , Speed_I = 0.0f;
 
 POSITION END, START;
+SwitchTIM encoder;
 
 #define MAXSPEED 970
 #define MINSPEED 600
@@ -39,7 +47,7 @@ void set_params(){
 	Speed_min = 30;
 	Speed_max = 6000;
 	Move_radium = 0.00001;
-	Angle_radium = 0.00001;
+	Angle_radium = 0.001;
 	Angle_speed = 2400;
 	Move_speed = 3500;
 }
@@ -75,6 +83,12 @@ void TIM2_IRQHandler(void){
 			 if (b[i]->cnt==0)
 				 b[i]->ispressed=false;
 		 }
+		 if(pitch_count)
+			pitch_count--;
+		 if(load_count)
+			load_count--;
+		 if(hit_count)
+			hit_count--;
 		TIM_ClearITPendingBit(TIM2, TIM_FLAG_Update);//必须清除中断标志位否则一直中断
 	}	
 }
@@ -93,16 +107,12 @@ int main(void)
 	int g_vega_pos_x = 0, g_vega_pos_y= 0;   
 	float g_vega_angle = 0;
 	
-	int temp_x, temp_y;
-	float temp_angle;
-	
 	float errorAngle, error_X, error_Y, Serror_X, Serror_Y;
 	float factor = 5;
 	float anglebuf =0;
 	int Xianding = 0;
 	u8 POS_Mark = 0;
 	float Pre_ErrorY = 0;
-	SwitchTIM encoder;
 	
 	static int TURN_speed;
 	static int ChassisSpeed;
@@ -114,9 +124,10 @@ int main(void)
 	nvic_config();
 	
 	TIM9_Init();
-	TIM3_Init();
-	TIM4_Init();
-//	TIM5_Init();
+	TIM14_Init();
+	TIM13_Init();
+	Step1_Init();
+	Step2_Init();
 //	SPI2_Init();
 	usart_init(&Hx, &Hy);
 	cmd_init();
@@ -127,12 +138,15 @@ int main(void)
     vega_init(&g_vega_pos_x,&g_vega_pos_y,&g_vega_angle);
     vega_reset();
 	encoder_init(&encoder);
-	SetUsed(4);
-	SetTime(5);
+	SetUsed(4,1);
 	delay_ms(4000);
+	SetTime(5);
 	TIM2_Init();
 	USART_SendString(UART5,"msg: Let's go!\n");
 	
+	USART_SendString(MOTOR_USARTx,"5HO\r6HO\r");
+	USART_SendString(MOTOR_USARTx,"5SP10000\r5AC1000\r5DEC1000\r");
+
 	set_params();
 	direction_angle = PI/2;
 	START.X = g_vega_pos_x* 0.0001 * 0.81;
@@ -141,18 +155,16 @@ int main(void)
 	OPEN_Hander = 1;
 	
 	END = START;
-	state = ready;
-	temp_x = g_vega_pos_x;
-	temp_y = g_vega_pos_y;
-	temp_angle = g_vega_angle;
+	car_state = car_stop;
+	pitch_state = pitch_ready;
+	load_state = load_ready;
+	hit_state = hit_ready;
     while(1) 
 	{
-		
-		
 		if(g_stop_flag){//停止一切运动
-			USART_SendString(MOTOR_USARTx,"2v0\r3v0\r4v0\r");
-			USART_SendString(USART2,"0v0\r2v0\r");
-			USART_SendString(UART4,"1v0\r");
+			USART_SendString(MOTOR_USARTx,"0v0\r1v0\r2v0\r");
+			USART_SendString(MOTOR_USARTx,"3v0\r4v0\r");
+			//USART_SendString(MOTOR_USARTx,"5v0\r6v0\r");
 		}else{
 			bottons_check();
 			sticks_check(Hx,Hy);
@@ -160,122 +172,210 @@ int main(void)
 			pos_y = g_vega_pos_y* 0.0001 * 0.81;
 			angle = (g_vega_angle/180.f)*PI;
 			//USART_SendString(UART5,"\n\nX=%f   Y=%f  angle=%f\n",pos_x, pos_y , angle);
-			ChassisSpeed= Move_speed;		
+			ChassisSpeed= Move_speed;
+			Step_check();
 			if(OPEN_Hander ==0){
 				/**-------------------------自动部分--------------------------------**/		
-//				if(state == ready){
-//					/*vega_set_angle(temp_angle);
-//					vega_set_pos(temp_x, temp_y);
-//					g_vega_angle = temp_angle;
-//					g_vega_pos_x = temp_x;
-//					g_vega_pos_y = temp_y;
-//					pos_x = g_vega_pos_x* 0.0001 * 0.81;
-//					pos_y = g_vega_pos_y* 0.0001 * 0.81;
-//					angle = (g_vega_angle/180.f)*PI;*/
-//					START.X = g_vega_pos_x* 0.0001 * 0.81;
-//					START.Y = g_vega_pos_y* 0.0001 * 0.81;
-//					START.ANG = (g_vega_angle/180.f)*PI;
-//					ms = 0;
-//					state = running;
-//				}
-//				if(state == running){
-//					errorAngle = angle - END.ANG;
-//					error_X = END.X - pos_x;
-//					error_Y = END.Y - pos_y;
-//					
-//					Serror_X = START.X - pos_x;
-//					Serror_Y = START.Y - pos_y;
-//					
-//					if(factor * factor * (powf(Serror_X,2)+powf(Serror_Y,2)) < (powf(error_X,2)+powf(error_Y,2))) {
-//						if((powf(Serror_X,2)+powf(Serror_Y,2)) > 0.0009)
-//							ChassisSpeed = sqrt(powf(Serror_X,2)+powf(Serror_Y,2))*Move_speed * factor;
-//						else 
-//							ChassisSpeed = 0.03 * Move_speed * factor;
-//					}
-//					else {
-//						if((powf(error_X,2)+powf(error_Y,2)) > 1)
-//							ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
-//						else if((powf(error_X,2)+powf(error_Y,2)) > 0.0025)
-//							ChassisSpeed = sqrt(sqrt(powf(error_X,2)+powf(error_Y,2))) * Move_speed;
-//						else
-//							ChassisSpeed = 89.44 * (powf(error_X,2)+powf(error_Y,2)) * Move_speed;
-//					}
-//					/*if((powf(error_X,2)+powf(error_Y,2)) > 1)
-//						ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
-//					else if((powf(error_X,2)+powf(error_Y,2)) > 0.01)
-//						ChassisSpeed = sqrt(sqrt(powf(error_X,2)+powf(error_Y,2)))*Move_speed;
-//					else 
-//						ChassisSpeed = 31.6 * (powf(error_X,2)+powf(error_Y,2)) * Move_speed;
-//					*/
-//					if(ChassisSpeed>Speed_max)
-//						ChassisSpeed = Speed_max;
-//					
-//					if(errorAngle >= 0.05 && errorAngle < 2)
-//					{          //角度调整
-//						TURN_speed = -1*Angle_speed*errorAngle;
-//					}
-//					else if(errorAngle <=-0.05 && errorAngle > -2)
-//					{
-//						TURN_speed = -1*Angle_speed*errorAngle;
-//					}
-//					else if(errorAngle > Angle_radium && errorAngle < 0.05)
-//					{
-//						TURN_speed = -1*Angle_speed*errorAngle;
-//					}
-//					else if(errorAngle < -1*Angle_radium && errorAngle > -0.05)
-//					{
-//						TURN_speed = -1*Angle_speed*errorAngle;
-//					}
-//					else if(errorAngle>=2)
-//					{
-//						TURN_speed =-1*Angle_speed*2;
-//					}
-//					else if(errorAngle<=-2)
-//					{
-//						TURN_speed =-1*Angle_speed*(-2);
-//					}
-//					else
-//					{
-//						TURN_speed= 0;
-//					}
-//					
-//					if(powf(error_X,2)+powf(error_Y,2) <= Move_radium)
-//					{//已经到达
-//						ChassisSpeed = 0;
-//					}
-//					else
-//					{
-//						direction_angle = atan2(error_Y,error_X);
-//					}
-//			
-//					Chassis_motor3 = -1* (ChassisSpeed * cos((CH_angle_M3 +angle) - direction_angle) + TURN_speed);//Y轴方向，这里direction_angle代表小车相对于场地坐标系的方向
-//					Chassis_motor4 = -1* (ChassisSpeed * cos((CH_angle_M4 +angle) - direction_angle) + TURN_speed);
-//					Chassis_motor2 = -1* (ChassisSpeed * cos((CH_angle_M2 +angle) - direction_angle) + TURN_speed);
-//					
-//					temp_x = g_vega_pos_x;
-//					temp_y = g_vega_pos_y;
-//					temp_angle = g_vega_angle;
-//					
-//					if(fabs(Chassis_motor2) < 1 && fabs(Chassis_motor4) < 1 && fabs(Chassis_motor3) < 1)
-//					{
-//						USART_SendString(MOTOR_USARTx,"2v0\r3v0\r4v0\r");
-//						state = stop;
-//					}
-//					else
-//					{
-//						USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
-//					}
-//				}
-//				else if(state == stop)
-//				{
-//					if(ms>200)
-//						USART_SendString(CMD_USARTx,"msg: %fs\n",ms*5.0/1000);
-//					ms = 0;
-//					/*pos_x = temp_x* 0.0001 * 0.81;
-//					pos_y = temp_y* 0.0001 * 0.81;
-//					angle = (temp_angle/180.f)*PI;*/
-//					state = ready;
-//				}
+				/*switch(pitch_state){
+					case pitch_ready:
+						if(hit_flag){
+							pitch_state = pitch_up;
+							pitch_flag = true;
+							pitch_count = 2000;
+						}
+						break;
+					case pitch_up:
+						if(pitch_count == 0){
+							pitch_state = pitch_wait;
+						}
+						break;
+					case pitch_wait:
+						if(load_state == load_wait && hit_state == hit_wait)
+							pitch_state = load_ready;
+						break;
+				}*/
+				
+				switch(load_state){
+					case load_ready:
+						if(hit_flag){
+							load_state = load_up;
+							PGout(12) = 1;
+							load_count = 100;
+						}
+						break;
+					case load_up:
+						if(load_count == 0){
+							load_state = load_catch;
+							PGout(13) = 1;
+							TIM_SetCompare2(TIM9,1800);
+							load_count = 100;
+						}
+						break;
+					case load_catch:
+						if(load_count == 0){
+							load_state = load_down;
+							PGout(12) = 0;
+							load_count = 1000;
+						}
+						break;
+					case load_down:
+						if(load_count == 0){
+							load_state = load_turn;
+							Step1_moveto(Step1_get_count()+4080);
+							Step2_moveto(500);
+						}
+						break;
+					case load_turn:
+						if(Step1_state)
+							load_state = load_wait;
+						break;
+					case load_wait:
+						if(pitch_state == pitch_wait && hit_state == hit_wait)
+							load_state = load_ready;
+						break;
+				}
+				
+				/*switch(hit_state){
+					case hit_ready:
+						if(hit_flag && load_state == load_turn)
+						{	
+							USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(pull_pos*10000));
+							USART_SendString(MOTOR_USARTx,"5M\r");
+							hit_count = 2000;
+						}
+						break;
+					case hit_pull:
+						if(hit_count == 0 && Step2_state){
+							hit_state = hit_put;
+							TIM_SetCompare2(TIM9,1060);
+							hit_count = 1000;
+						}
+						break;
+					case hit_put:
+						if(hit_count == 0 && pitch_state == pitch_wait)
+						{
+							PGout(13) = 0;
+							hit_count = 2000;
+							USART_SendString(MOTOR_USARTx,"5LA35000\r");
+							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+							Step2_moveto(0);
+							hit_state = hit_push;
+							PGout(13) = 1;
+						}
+						break;
+					case hit_push:
+						if(hit_count == 0 && Step2_state)
+						{
+							hit_state = hit_wait;
+						}
+						break;
+					case hit_wait:
+						if(pitch_state == pitch_wait && load_state == load_wait)
+							hit_state = hit_ready;
+						break;
+				}*/
+				
+				if(car_state == car_ready){
+					START.X = g_vega_pos_x* 0.0001 * 0.81;
+					START.Y = g_vega_pos_y* 0.0001 * 0.81;
+					START.ANG = (g_vega_angle/180.f)*PI;
+					ms = 0;
+					car_state = car_running;
+				}
+				if(car_state == car_running){
+					errorAngle = angle - END.ANG;
+					error_X = END.X - pos_x;
+					error_Y = END.Y - pos_y;
+					
+					Serror_X = START.X - pos_x;
+					Serror_Y = START.Y - pos_y;
+					
+					if(factor * factor * (powf(Serror_X,2)+powf(Serror_Y,2)) < (powf(error_X,2)+powf(error_Y,2))) {//加速
+						if((powf(Serror_X,2)+powf(Serror_Y,2)) > 0.0009)
+							ChassisSpeed = sqrt(powf(Serror_X,2)+powf(Serror_Y,2))*Move_speed * factor;
+						else 
+							ChassisSpeed = 0.03 * Move_speed * factor;
+					}
+					else {
+						if((powf(error_X,2)+powf(error_Y,2)) > 1)
+							ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
+						else if((powf(error_X,2)+powf(error_Y,2)) > 0.0025)
+							ChassisSpeed = sqrt(sqrt(powf(error_X,2)+powf(error_Y,2))) * Move_speed;
+						else
+							ChassisSpeed = 89.44 * (powf(error_X,2)+powf(error_Y,2)) * Move_speed;
+					}
+					/*if((powf(error_X,2)+powf(error_Y,2)) > 1)
+						ChassisSpeed = sqrt(powf(error_X,2)+powf(error_Y,2))*Move_speed;
+					else if((powf(error_X,2)+powf(error_Y,2)) > 0.01)
+						ChassisSpeed = sqrt(sqrt(powf(error_X,2)+powf(error_Y,2)))*Move_speed;
+					else 
+						ChassisSpeed = 31.6 * (powf(error_X,2)+powf(error_Y,2)) * Move_speed;
+					*/
+					if(ChassisSpeed>Speed_max)
+						ChassisSpeed = Speed_max;
+					
+					if(errorAngle >= Angle_radium && errorAngle < 1)
+					{          //角度调整
+						TURN_speed = -1*sqrt(errorAngle)*Angle_speed;
+					}
+					else if(errorAngle <=-1*Angle_radium && errorAngle > -1)
+					{
+						TURN_speed = -1*sqrt(errorAngle)*Angle_speed;
+					}else if(errorAngle >= 1 && errorAngle < 2)
+					{          //角度调整
+						TURN_speed = -1*errorAngle*Angle_speed;
+					}
+					else if(errorAngle <=-1 && errorAngle > -2)
+					{
+						TURN_speed = -1*errorAngle*Angle_speed;
+					}
+					else if(errorAngle>=2)
+					{
+						TURN_speed =-1*2*Angle_speed;
+					}
+					else if(errorAngle<=-2)
+					{
+						TURN_speed =-1*(-2)*Angle_speed;
+					}
+					else
+					{
+						TURN_speed= 0;
+					}
+					
+					if(powf(error_X,2)+powf(error_Y,2) <= Move_radium)
+					{//已经到达
+						ChassisSpeed = 0;
+					}
+					else
+					{
+						direction_angle = atan2(error_Y,error_X);
+					}
+			
+					Chassis_motor0 = (ChassisSpeed * cos((CH_angle_M0 +angle) - direction_angle) + TURN_speed);//Y轴方向，这里direction_angle代表小车相对于场地坐标系的方向
+					Chassis_motor1 = -1*(ChassisSpeed * cos((CH_angle_M1 +angle) - direction_angle) + TURN_speed);
+					Chassis_motor2 = (ChassisSpeed * cos((CH_angle_M2 +angle) - direction_angle) + TURN_speed);
+					
+					if(fabs(Chassis_motor2) < 5 && fabs(Chassis_motor1) < 5 && fabs(Chassis_motor0) < 5)
+					{
+						USART_SendString(MOTOR_USARTx,"2v0\r1v0\r0v0\r");
+						car_state = car_stop;
+					}
+					else
+					{
+						USART_SendString(MOTOR_USARTx,"1v%d\r2v%d\r0v%d\r",Chassis_motor1 , Chassis_motor2 , Chassis_motor0);
+					}
+				}
+				else if(car_state == car_stop)
+				{
+					if(ms>200)
+						USART_SendString(CMD_USARTx,"msg: %fs\n",ms*5.0/1000);
+					ms = 0;
+					/*pos_x = temp_x* 0.0001 * 0.81;
+					pos_y = temp_y* 0.0001 * 0.81;
+					angle = (temp_angle/180.f)*PI;*/
+					//state = ready;
+					//OPEN_Hander = 1;
+				}
 			}
 			else if(OPEN_Hander ==1)
 			{
@@ -300,50 +400,99 @@ int main(void)
 					else TIM_SetCompare2(TIM9,1060);
 					USART_SendString(bluetooth,"msg: RL is pressed\n");
 				}
-				
-				if (LU.ispressed) TURN_speed +=200;					
-				if (LD.ispressed) TURN_speed -=200;
-				if (TURN_speed !=0){
-					USART_SendString(bluetooth,"msg: %d\n",encoder.GetTim4);
-					USART_SendString(UART4,"4V%d\r",TURN_speed);
-				}else{
-					USART_SendString(UART4,"4V0\r");
+//				if (LR.ispressed){
+//					TIM13->CCER |= TIM_CCER_CC1E;
+//					PFout(4) = 0;
+//				}else				
+//				if (LL.ispressed){
+//					TIM13->CCER |= TIM_CCER_CC1E;
+//					PFout(4) = 1;
+//				}else{ 
+//					//USART_SendString(bluetooth,"msg: 000!\n");
+//					TIM13->CCER &= ~TIM_CCER_CC1E;
+//				}
+				if (L2.ispressed) {
+					if (LU.ispressed){
+						TIM14->CCER |= TIM_CCER_CC1E;
+						PFout(5) = 0;
+					}else				
+					if (LD.ispressed){
+						PFout(5) = 1;
+						TIM14->CCER |= TIM_CCER_CC1E;
+					}else{ 
+					//USART_SendString(bluetooth,"msg: 000!\n");
+						TIM14->CCER &= ~TIM_CCER_CC1E;
+					}Xianding=0;
+					if (LR.ispressed) Xianding -=2000;					
+					if (LL.ispressed) Xianding +=2000;
+					if (Xianding !=0){
+						//USART_SendString(bluetooth,"msg: %d\n",Xianding);
+						USART_SendString(UART4,"5V%d\r",Xianding);
+					}else{
+						//USART_SendString(bluetooth,"msg: %d\n",Xianding);
+						USART_SendString(UART4,"5V0\r");
+					}
+				}else{ 
+					//USART_SendString(bluetooth,"msg: 000!\n");
+						TIM14->CCER &= ~TIM_CCER_CC1E;
+						USART_SendString(UART4,"5V0\r");
 				}
-				if (LR.ispressed) Xianding +=2000;					
-				if (LL.ispressed) Xianding -=2000;
+				if (R2.ispressed){
+					Xianding=0;
+					if (LU.ispressed) Xianding +=200;					
+					if (LD.ispressed) Xianding -=200;
+					if (Xianding !=0){
+						//USART_SendString(bluetooth,"msg: %d\n",Xianding);
+						USART_SendString(UART4,"3V%d\r",Xianding);
+					}else{
+						USART_SendString(UART4,"3V0\r");
+					}
+					Xianding=0;
+					if (LL.ispressed) Xianding +=200;					
+					if (LR.ispressed) Xianding -=200;
+					if (Xianding !=0){
+						//USART_SendString(bluetooth,"msg: %d\n",Xianding);
+						USART_SendString(UART4,"4V%d\r",Xianding);
+					}else{
+						USART_SendString(UART4,"4V0\r");
+					}
+				}else{
+					USART_SendString(UART4,"3V0\r4v0\r");
+				}
+				Xianding=0;
+				if (L1.ispressed) Xianding +=200;					
+				if (R1.ispressed) Xianding -=200;
 				if (Xianding !=0){
 					//USART_SendString(bluetooth,"msg: %d\n",Xianding);
-					USART_SendString(UART4,"5V%d\r",Xianding);
+					USART_SendString(UART4,"6V%d\r",Xianding);
 				}else{
-					//USART_SendString(bluetooth,"msg: %d\n",Xianding);
-					USART_SendString(UART4,"5V0\r");
+					USART_SendString(UART4,"6V0\r");
 				}
-				TURN_speed=0;
-				if (R2.ispressed) TURN_speed +=200;					
-				if (L2.ispressed) TURN_speed -=200;
-				if (TURN_speed !=0){
-					//USART_SendString(bluetooth,"msg: %d\n",TURN_speed);
-					USART_SendString(UART4,"3V%d\r",TURN_speed);
-				}else{
-					USART_SendString(UART4,"3V0\r");
+				ChassisSpeed = 1000;
+				if (!L2.ispressed&&!R2.ispressed){
+				if (LU.ispressed) direction_angle = -PI/2;
+				else if (LD.ispressed) direction_angle = PI/2;
+				else if (LL.ispressed) direction_angle = PI;
+				else if (LR.ispressed) direction_angle = 0;
+				else ChassisSpeed = 0;}else
+				ChassisSpeed = 0;
+				
+				Chassis_motor0 = -1* (ChassisSpeed/7*3*cos((CH_angle_M0 + errorAngle) - direction_angle)+TURN_speed);
+				Chassis_motor1 = (ChassisSpeed/7*3*cos((CH_angle_M1 + errorAngle) - direction_angle)+TURN_speed);
+				Chassis_motor2 = -1* (ChassisSpeed/7*3*cos((CH_angle_M2 + errorAngle) - direction_angle)+TURN_speed);
+				USART_SendString(MOTOR_USARTx,"1v%d\r2v%d\r0v%d\r",Chassis_motor1 , Chassis_motor2 , Chassis_motor0);
+//				if (Chassis_motor0 != 0) USART_SendString(UART5,"msg: C0:%d\n",Chassis_motor0);
+//				if (Chassis_motor1 != 0) USART_SendString(UART5,"msg: C1:%d\n",Chassis_motor1);
+//				if (Chassis_motor2 != 0) USART_SendString(UART5,"msg: C2:%d\n",Chassis_motor2);
+				if(OPEN_Hander == 1){
+					END.X=pos_x;
+					END.Y=pos_y;
+					END.ANG=angle;
 				}
-//				if (LU.ispressed) direction_angle = -PI/2;
-//				else if (LD.ispressed) direction_angle = PI/2;
-//				else if (LL.ispressed) direction_angle = PI;
-//				else if (LR.ispressed) direction_angle = 0;
-//				else ChassisSpeed = 0;
-				
-				Chassis_motor3 = -1* (ChassisSpeed*cos((CH_angle_M3 + errorAngle) - direction_angle)+TURN_speed);
-				Chassis_motor4 = -1* (ChassisSpeed*cos((CH_angle_M4 + errorAngle) - direction_angle)+TURN_speed);
-				Chassis_motor2 = -1* (ChassisSpeed*cos((CH_angle_M2 + errorAngle) - direction_angle)+TURN_speed);
-				USART_SendString(MOTOR_USARTx,"2v%d\r3v%d\r4v%d\r",Chassis_motor2 , Chassis_motor3 , Chassis_motor4);
-				
-				END.X=pos_x;
-				END.Y=pos_y;
-				END.ANG=angle;
 			}
 			
-			if (pitch_flag){
+			if (pitch_flag)
+			{
 				pitch.now = encoder.GetTim3;
 				pitch.d = pur_pitch - pitch.now;
 				pitch.dd = pitch.d - pitch.d_last;

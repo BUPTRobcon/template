@@ -1,19 +1,21 @@
 #include "cmd_func.h"
 #include "cmd.h"
 #include "stdlib.h"
+#include "step.h"
+#include "encoder.h"
 #include "configuration.h"
 #include "string.h"
+#include "delay.h"
 #include "math.h"
 #include "param.h"
 
 extern s8 ptrS,ptrB;
-extern enum {stop,running,ready} state;//车的运动状态
+extern enum {car_stop, car_running, car_ready} car_state;//车的运动状态
 extern Param * param;
 extern bool g_stop_flag;
 extern float pos_x;
 extern float pos_y;
 extern float angle;
-extern int TIM3_round,TIM4_round;
 extern int WantSpeed;
 extern int truespeed;
 extern float Move_radium,Angle_radium;
@@ -27,8 +29,9 @@ static float motor_v;
 
 extern float pur_pitch;
 extern float pur_roll;
-
+extern SwitchTIM encoder;
 extern bool pitch_flag,roll_flag;
+extern bool hit_flag;
 
 void cmd_reboot_func(int argc,char *argv[]){
     NVIC_SystemReset();
@@ -36,7 +39,7 @@ void cmd_reboot_func(int argc,char *argv[]){
 
 void cmd_stop_func(int argc,char *argv[]){
     if(argc == 1){
-        g_stop_flag = 0x01&(~g_stop_flag);
+        g_stop_flag = !g_stop_flag;
     }else if(argc == 2){
         g_stop_flag = atoi(argv[1]);
     }
@@ -47,9 +50,15 @@ void cmd_hello_func(int argc,char *argv[]){
 }
 
 void cmd_test_func(int argc,char *argv[]){
+	if(argc == 1){
+		hit_flag = true;
+		OPEN_Hander = 0;
+	}
 	if(argc == 2){
-		TIM_SetCompare2(TIM9,200*atof(argv[1])-1);
-		USART_SendString(CMD_USARTx, "msg: Time for degugging\n");
+		OPEN_Hander = 0;
+		USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(atof(argv[1])*10000));
+		//delay_ms(1000);
+		USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
 	}else if(argc == 3){
 		if(strcmp(argv[1],"air") == 0)
 		{
@@ -57,6 +66,18 @@ void cmd_test_func(int argc,char *argv[]){
 				PGout(12) = !PGout(12);
 			}else if(strcmp(argv[2],"2") == 0){
 				PGout(11) = !PGout(11);
+			}
+		}else{
+			
+		}
+	}else if(argc == 4){
+		if(strcmp(argv[1],"step") == 0)
+		{
+			OPEN_Hander = 0;
+			if(strcmp(argv[2],"1") == 0){
+				Step1_moveto(atoi(argv[3]));
+			}else if(strcmp(argv[2],"2") == 0){
+				Step2_moveto(atoi(argv[3]));
 			}
 		}
 	}
@@ -186,7 +207,7 @@ void cmd_action_func(int argc,char *argv[])
 		END.Y = y;
 		END.ANG = angle;
 		OPEN_Hander = 0;
-		state = ready;
+		car_state = car_ready;
         //跑到下一个点
     }else if (argc == 2){
         no = atoi(argv[1]);
@@ -208,7 +229,7 @@ void cmd_action_func(int argc,char *argv[])
 		END.Y = y;
 		END.ANG = angle;
 		OPEN_Hander = 0;
-		state = ready;
+		car_state = car_ready;
     }
 	
 }
@@ -239,7 +260,7 @@ void cmd_launch_func(int argc,char *argv[])
 {
     int no, no0;
     int erro_no;
-    float pitch, roll, speed, yaw;
+    static float pitch, roll, speed =7.7, yaw;
     Launch_data * data;
     list_node * ptr;
     if (argc == 1)
@@ -249,21 +270,19 @@ void cmd_launch_func(int argc,char *argv[])
     }else if (strcmp(argv[1], "now")==0)
     {
         //发射参数
-        USART_SendString(CMD_USARTx, "pitch:%.6f roll:%.6f speed:%d yaw:%.6f\n",
-				(TIM4_round * 30000.f - TIM4->CNT)/10000.f,(TIM3_round * 30000.f - TIM3->CNT)/10000.f,truespeed,angle);
+        USART_SendString(CMD_USARTx, "pitch:%d roll:%d speed:%.6f yaw:%.6f\n",
+				encoder.GetTim3,encoder.GetTim4,speed,angle);
     }else if (strcmp(argv[1],"start")==0)
     {
-        USART_SendString(UART4,"\rv100\r");
-		USART_SendString(UART4,"\rv100\r");
+       
     }else if (strcmp(argv[1],"stop")==0)
     {
 		//WantSpeed = 0;
 		TIM_SetCompare1(TIM8,7.7/100*1000000/50 - 1);
-        USART_SendString(UART4,"v0\r");
-		USART_SendString(UART4,"v0\r");
+        
     }else if (strcmp(argv[1],"pushstop")==0)
     {
-        USART_SendString(UART4,"v0\r");
+        
     }else if (strcmp(argv[1],"load")==0)
     {
         no = atoi(argv[2]);
@@ -287,7 +306,7 @@ void cmd_launch_func(int argc,char *argv[])
 		END.Y = pos_y;
 		END.ANG = yaw;
 		OPEN_Hander = 0;
-		state = running;
+		car_state = car_running;
     }else if (strcmp(argv[1], "set")==0)
     {
 		if(strcmp(argv[2], "pitch")==0)
@@ -303,14 +322,13 @@ void cmd_launch_func(int argc,char *argv[])
         }else if(strcmp(argv[2], "speed")==0)
 		{
 			speed = atof(argv[3]);
-			//WantSpeed = speed;
 			TIM_SetCompare1(TIM9,speed/100*1000000/50 - 1);
 		}else if(strcmp(argv[2], "yaw")==0)
 		{
 			yaw = atof(argv[3]);
 			END.ANG = yaw;
 			OPEN_Hander = 0;
-			state = ready;
+			car_state = car_ready;
         }else if(argc == 6) {
 		//直接调整
 			pitch = atof(argv[2]);

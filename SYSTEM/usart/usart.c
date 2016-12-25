@@ -63,6 +63,7 @@ void USART1_IRQHandler(void)
 	u8 Res;	u8 tmp;
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) 
 	{
+		OPEN_Hander = 1;
 		Res =USART_ReceiveData(USART1);
 		if (Res==0x0d&&ptrS<0) {
 			ptrS=-ptrS;
@@ -272,7 +273,7 @@ ch = ch;
 int fputc(int ch, FILE *f)
 { 	
 	while((USART_printf->SR&0X40)==0);//循环发送,直到发送完毕  
-	USART1->DR = (u8) ch;      
+	USART_printf->DR = (u8) ch;      
 	return ch;
 }
 #endif

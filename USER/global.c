@@ -28,8 +28,8 @@ void roll_move(float v){
 void bottons_check(){
 	if (ptrB>-1){
 		if (ptrB>=4&ptrB<=7)
-			b[ptrB]->cnt=4;
-		else b[ptrB]->cnt=50;
+			b[ptrB]->cnt=2;
+		else b[ptrB]->cnt=55;
 		b[ptrB]->ispressed=true;
 		ptrB=-1;
 	}

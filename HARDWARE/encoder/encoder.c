@@ -65,8 +65,11 @@ void encoder_callback(CanRxMsg *can_rx_msg){
 * 可用TIM1，TIM3，TIM4，TIM5,TIM8
 *即参数设1,3,5,4,5,8.其他无效
 */
-void SetUsed(u8 N){
-	can_send_msg(INUSE_CANID,&N,1);
+void SetUsed(u8 N, u8 S){
+	u8 a[2];
+	a[0] = N;
+	a[1] = S;
+	can_send_msg(INUSE_CANID,a,2);
 }
 
 /*

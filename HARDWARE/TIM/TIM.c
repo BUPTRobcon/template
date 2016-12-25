@@ -4,79 +4,6 @@ TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
 TIM_ICInitTypeDef   TIM_ICInitStructure;
 
-int TIM3_round,TIM4_round;
-
-void TIM4_Init(){
-
-	TIM_DeInit(TIM4);
-   
-	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-	TIM_TimeBaseStructure.TIM_Prescaler = 0x0;  // No prescaling 42M
-	TIM_TimeBaseStructure.TIM_Period = 29999;  
-	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
- 
-	TIM_EncoderInterfaceConfig(TIM4,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
-	TIM_ICStructInit(&TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_ICFilter = 10;
-	TIM_ICInit(TIM4, &TIM_ICInitStructure);
-
-	TIM4->CNT=0;
-	TIM4_round=0;
-
-	TIM_ClearFlag(TIM4, TIM_FLAG_Update);
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-	TIM_Cmd(TIM4, ENABLE);	
-}
-
-void TIM3_Init(){
-
-	TIM_DeInit(TIM3);
-   
-	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-	TIM_TimeBaseStructure.TIM_Prescaler = 0x0;  // No prescaling 42M
-	TIM_TimeBaseStructure.TIM_Period = 29999;  
-	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
- 
-	TIM_EncoderInterfaceConfig(TIM3,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
-	TIM_ICStructInit(&TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_ICFilter = 6;
-	TIM_ICInit(TIM3, &TIM_ICInitStructure);
-
-	TIM3->CNT=0;
-	TIM3_round=0;
-
-	TIM_ClearFlag(TIM3, TIM_FLAG_Update);
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	TIM_Cmd(TIM3, ENABLE);	
-}
-
-void TIM5_Init(){
-	TIM_DeInit(TIM5);
-   
-	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-	TIM_TimeBaseStructure.TIM_Prescaler = 0x0;  // No prescaling 42M
-	TIM_TimeBaseStructure.TIM_Period = 29999;  
-	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
-	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
- 
-	TIM_EncoderInterfaceConfig(TIM5,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
-	TIM_ICStructInit(&TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_ICFilter = 6;
-	TIM_ICInit(TIM5, &TIM_ICInitStructure);
-
-	TIM5->CNT=6000;
-//	TIM3_round=0;
-
-//	TIM_ClearFlag(TIM3, TIM_FLAG_Update);
-//	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	TIM_Cmd(TIM5, ENABLE);	
-}
-
 void TIM2_Init()        //0.005ms 定时
 {
 	/*TIM2*/
@@ -116,19 +43,51 @@ void TIM9_Init()  //无刷舵机PWM输出
 	TIM_Cmd(TIM9,ENABLE);
 }
 
-void TIM3_IRQHandler(){
-	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		if (TIM3->CNT==0) TIM3_round-=1;
-		else if (TIM3->CNT==TIM3->ARR) TIM3_round+=1;
-		TIM_ClearITPendingBit(TIM3,TIM_FLAG_Update);
-	}
-}
-void TIM4_IRQHandler(){
-	if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET){
-		if (TIM4->CNT==0) TIM4_round-=1;
-		else if (TIM4->CNT==TIM4->ARR) TIM4_round+=1;
-		TIM_ClearITPendingBit(TIM4,TIM_FLAG_Update);
-	}
+void TIM13_Init(void)
+{
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM13, ENABLE);
+	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
+	TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;  //    84M/84 =1M  1us/count
+	TIM_TimeBaseStructure.TIM_Period = 1000 - 1;  
+	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
+	TIM_TimeBaseInit(TIM13, &TIM_TimeBaseStructure);
+	
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //选择定时器模式:TIM脉冲宽度调制模式1
+ 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable; //比较输出使能
+	TIM_OCInitStructure.TIM_Pulse = 0.5*(TIM13->ARR+1) - 1;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low; //输出极性
+	TIM_OC1Init(TIM13, &TIM_OCInitStructure);  //根据T指定的参数初始化外设TIM13 OC1
+    TIM_OC1PreloadConfig(TIM13, TIM_OCPreload_Enable);  //使能TIM13在CCR1上的预装载寄存器
+    TIM_ARRPreloadConfig(TIM13,ENABLE);//ARPE使能 
+	
+	TIM_ClearFlag(TIM13, TIM_FLAG_Update);
+	TIM_ITConfig(TIM13, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM13, ENABLE);	
+	TIM13->CCER &= ~TIM_CCER_CC1E;
 }
 
+void TIM14_Init(void)
+{
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE);
+	TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
+	TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;  //    84M/84 =1M  1us/count
+	TIM_TimeBaseStructure.TIM_Period = 250 - 1;  
+	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  //设置了时钟分割
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;// 向上  
+	TIM_TimeBaseInit(TIM14, &TIM_TimeBaseStructure);
+	
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //选择定时器模式:TIM脉冲宽度调制模式1
+ 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable; //比较输出使能
+	TIM_OCInitStructure.TIM_Pulse = 0.5*(TIM14->ARR+1) - 1;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low; //输出极性
+	TIM_OC1Init(TIM14, &TIM_OCInitStructure);  //根据T指定的参数初始化外设TIM13 OC1
+    TIM_OC1PreloadConfig(TIM14, TIM_OCPreload_Enable);  //使能TIM13在CCR1上的预装载寄存器
+    TIM_ARRPreloadConfig(TIM14,ENABLE);//ARPE使能 
+	
+	TIM_ClearFlag(TIM14, TIM_FLAG_Update);
+	TIM_ITConfig(TIM14, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM14, ENABLE);	
+	TIM14->CCER &= ~TIM_CCER_CC1E;
+}
 

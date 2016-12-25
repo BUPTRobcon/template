@@ -9,7 +9,7 @@
 #include "delay.h"
 #include <stdbool.h>
 
-#define USART_printf USART1
+#define USART_printf UART4
 #define _printf 1
 
 #ifndef bluetooth
@@ -19,7 +19,7 @@
 
 
 #define STR_BUFFER_LEN 128
-#define MOTOR_USARTx USART1
+#define MOTOR_USARTx UART4
 #define PI 3.1415926
 
 #define USART_REC_LEN  			200 

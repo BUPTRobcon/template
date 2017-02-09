@@ -29,6 +29,8 @@ static float motor_v;
 
 extern float pur_pitch;
 extern float pur_roll;
+extern float pur_pull;
+extern int pur_step;
 extern SwitchTIM encoder;
 extern bool pitch_flag,roll_flag;
 extern bool hit_flag;
@@ -51,6 +53,9 @@ void cmd_hello_func(int argc,char *argv[]){
 
 void cmd_test_func(int argc,char *argv[]){
 	if(argc == 1){
+		pur_pitch = 3;
+		pur_step = 2000;
+		pur_pull = 7;
 		hit_flag = true;
 		OPEN_Hander = 0;
 	}
@@ -96,6 +101,8 @@ void cmd_pos_func(int argc,char *argv[])
     if (strcmp(argv[1], "now") == 0)
     {
         USART_SendString(CMD_USARTx, "x:%f y:%f\n", pos_x,pos_y);
+		USART_SendString(CMD_USARTx, "pitch:%f roll:%f speed:%d yaw:%.6f\n",
+				-encoder.GetTim3/10000.f,encoder.GetTim4/10000.f,encoder.GetTim5,angle);
     }else
     if(strcmp(argv[1],"add") == 0){
         if(argc < 5){
@@ -188,7 +195,7 @@ void cmd_action_func(int argc,char *argv[])
     float yaw;
     list_node * ptr;
     if(strcmp(argv[1],"left")==0){
-        OPEN_Hander = 1;
+        OPEN_Hander = 1; 
 		ptrB=L1_KEY;
     }else if(strcmp(argv[1],"right")==0){
         OPEN_Hander = 1;
@@ -265,17 +272,20 @@ void cmd_launch_func(int argc,char *argv[])
     list_node * ptr;
     if (argc == 1)
     {
-		
         //如果没开无刷，那就开无刷，转一圈推飞盘
-    }else if (strcmp(argv[1], "now")==0)
+    }else if (strcmp(argv[1],"hit")==0)
+    {//完成一次击打
+		pur_pitch = atof(argv[2]);
+		pur_step = atoi(argv[3]);
+		pur_pull = atof(argv[4]);
+		hit_flag = true;
+		OPEN_Hander = 0;
+    }else if(strcmp(argv[1],"fly")==0)
     {
-        //发射参数
-        USART_SendString(CMD_USARTx, "pitch:%f roll:%f speed:%d yaw:%.6f\n",
-				-encoder.GetTim3/10000.f,encoder.GetTim4/10000.f,encoder.GetTim5,angle);
-    }else if (strcmp(argv[1],"start")==0)
-    {
-       
-    }else if (strcmp(argv[1],"stop")==0)
+		PGout(11) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_11);
+		//USART_SendString(bluetooth,"msg: fly\r");
+	}
+	else if (strcmp(argv[1],"stop")==0)
     {
 		//WantSpeed = 0;
 		TIM_SetCompare1(TIM8,7.7/100*1000000/50 - 1);
@@ -315,7 +325,18 @@ void cmd_launch_func(int argc,char *argv[])
 			pitch = atof(argv[3]);//0-100
 			pur_pitch = pitch;
 			pitch_flag = true;
-		}else if(strcmp(argv[2], "roll")==0)
+		}else if(strcmp(argv[2],"turn") == 0)
+		{
+			OPEN_Hander = 0;
+			USART_SendString(MOTOR_USARTx,"6LA%d\r",(int)(atof(argv[3])*10000));
+			//delay_ms(1000);
+			USART_SendString(MOTOR_USARTx,"6M\r6M\r6M\r");
+		}
+		else if(strcmp(argv[2],"step") == 0)
+		{
+			Step2_moveto(atof(argv[3]));
+		}
+		else if(strcmp(argv[2], "roll")==0)
 		{
 			OPEN_Hander = 0;
 			roll = atof(argv[3]);
@@ -331,21 +352,16 @@ void cmd_launch_func(int argc,char *argv[])
 			END.ANG = yaw;
 			OPEN_Hander = 0;
 			car_state = car_ready;
-        }else if(argc == 6) {
-		//直接调整
-			pitch = atof(argv[2]);
-			roll = atof(argv[3]);
-			speed = atof(argv[4]);
-			yaw = atof(argv[5]);
-			pur_pitch = pitch;
-			pitch_flag = true;
-			pur_roll = roll;
-			roll_flag = true;
-			//Move_speed = speed;
-			TIM_SetCompare1(TIM8,speed/100*1000000/50 - 1);
-			END.ANG = yaw;
+        }else if(strcmp(argv[2], "step")==0)
+		{
+			Step2_moveto(atoi(argv[3]));
+        }else if(strcmp(argv[2], "pull")==0)
+		{
 			OPEN_Hander = 0;
-		}
+			USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(atof(argv[3])*10000));
+			//delay_ms(1000);
+			USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+        }
 		
     }else if (strcmp(argv[1], "print")==0)
     {

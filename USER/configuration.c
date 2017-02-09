@@ -234,7 +234,7 @@ void nvic_config()
 	
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2 2:2   抢占：响应    共 3级:3级
 	
-	NVIC_Configuration(UART5_IRQn,2,3,ENABLE);
+	NVIC_Configuration(UART5_IRQn,0,3,ENABLE);
 	NVIC_Configuration(USART1_IRQn,2,3,ENABLE);
 	NVIC_Configuration(USART3_IRQn,2,3,ENABLE);
 	NVIC_Configuration(TIM2_IRQn,0,2,ENABLE);

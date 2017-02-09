@@ -15,12 +15,10 @@ static cmd_struct cmd_tbl[] = {
      */
     CMD_ADD("help"," Print all command and usage ",cmd_help_func),
     CMD_ADD("reboot"," 重启程序 ",cmd_reboot_func),
-   // CMD_ADD("sensor","查看传感器状态 ",cmd_sensor_func),
     CMD_ADD("switch"," 查看触碰开关状态 ",cmd_switch_func),
     CMD_ADD("hello"," ",cmd_hello_func),
-//    CMD_ADD("speed"," 设置底盘运动速度 ",cmd_speed_func),
     CMD_ADD("launch"," 设置发射参数 ",cmd_launch_func),
-    CMD_ADD("pos"," 设置全场定位的坐标 ",cmd_pos_func),
+    CMD_ADD("pos"," 设置全场定位的坐标 ", cmd_pos_func),
     CMD_ADD("action"," 使用命令执行各种动作 ",cmd_action_func),
     CMD_ADD("stop"," ",cmd_stop_func),
 	CMD_ADD("param","系统参数",cmd_param_func),
@@ -162,7 +160,7 @@ void UART5_IRQHandler(void){
     
 	if(USART_GetITStatus(CMD_USARTx,USART_IT_RXNE) != RESET){      
         //USART_ClearITPendingBit(CMD_USARTx,USART_IT_RXNE);
-        c_recv = USART_ReceiveData(CMD_USARTx);           
+        c_recv = USART_ReceiveData(CMD_USARTx);  
         if(c_recv == '\n'){  //接受完一次指令
             if(cmd_line_length == 0){
                 return;
@@ -171,9 +169,9 @@ void UART5_IRQHandler(void){
             if(erro_n < 0){
                 //打印函数执行错误信息
                 if(erro_n == -3){
-                cmd_line_length = 0;
-                memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
-                return;
+					cmd_line_length = 0;
+					memset(cmd_line,0,MAX_CMD_LINE_LENGTH + 1);
+					return;
                 }else if(erro_n == -2){
                     USART_SendString(CMD_USARTx,"msg: 命令参数长度过长\n");
                 }else if(erro_n == -1){

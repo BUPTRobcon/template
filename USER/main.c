@@ -182,132 +182,133 @@ int main(void)
 			ChassisSpeed= Move_speed;
 			Step_check();
 			if(OPEN_Hander ==0){
-				/**-------------------------自动部分--------------------------------**/		
-				switch(pitch_state){
-					case pitch_ready:
-						if(hit_flag){
-							pitch_state = pitch_up;
-							hit_flag_count = 0;
-							pitch_flag = true;
-							pur_pitch = 5;
-							//USART_SendString(bluetooth,"msg: pitch_up\r");
-						}
-						break;
-					case pitch_up:
-						if(pitch_flag == false){
-							pitch_state = pitch_wait;
-							//USART_SendString(bluetooth,"msg: pitch_wait\r");
-							hit_flag_count++;
-						}
-						break;
-					case pitch_wait:
-						if(hit_flag_count == 3)
-						{
-							hit_flag = false;
-							pitch_state = load_ready;
-							//USART_SendString(bluetooth,"msg: pitch_ready\r");
-						}
-						break;
+				/**-------------------------自动部分--------------------------------**/	
+				if(hit_flag){
+					switch(pitch_state){
+						
+						case pitch_ready:
+							if(hit_flag){
+								pitch_state = pitch_up;
+								hit_flag_count = 0;
+								pitch_flag = true;
+								USART_SendString(bluetooth,"msg: pitch_up\r");
+							}
+							break;
+						case pitch_up:
+							if(pitch_flag == false){
+								pitch_state = pitch_wait;
+								USART_SendString(bluetooth,"msg: pitch_wait\r");
+								hit_flag_count++;
+							}
+							break;
+						case pitch_wait:
+							if(hit_flag_count == 3)
+							{
+								hit_flag = false;
+								pitch_state = load_ready;
+								USART_SendString(bluetooth,"msg: pitch_ready\r");
+							}
+							break;
+					}
+					
+					switch(load_state){
+						case load_ready:
+							if(hit_flag){
+								load_state = load_up;
+								PGout(12) = 1;
+								load_count = 100;
+								USART_SendString(bluetooth,"msg: load_up\r");
+							}
+							break;
+						case load_up:
+							if(load_count == 0){
+								load_state = load_catch;
+								PGout(13) = 1;
+								TIM_SetCompare2(TIM9,1800);
+								load_count = 100;
+								USART_SendString(bluetooth,"msg: load_catch\r");
+							}
+							break;
+						case load_catch:
+							if(load_count == 0){
+								load_state = load_down;
+								PGout(12) = 0;
+								load_count = 100;
+								USART_SendString(bluetooth,"msg: load_down\r");
+							}
+							break;
+						case load_down:
+							if(load_count == 0){
+								load_state = load_turn;
+								Step1_moveto(Step1_get_count()+4080);
+								USART_SendString(bluetooth,"msg: load_turn\r");
+							}
+							break;
+						case load_turn:
+							if(Step1_state()){
+								load_state = load_wait;
+								USART_SendString(bluetooth,"msg: load_wait\r");
+								hit_flag_count++;
+							}
+							break;
+						case load_wait:
+							if(hit_flag_count == 3)
+							{
+								load_state = load_ready;
+								USART_SendString(bluetooth,"msg: load_ready\r");
+							}
+							break;
+					}
+					
+					switch(hit_state){
+						case hit_ready:
+							if(hit_flag && load_state == load_turn)
+							{	
+								Step2_moveto(pur_step);
+								USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(pur_pull*10000));
+								USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+								hit_count = 1000;
+								hit_state = hit_pull;
+								USART_SendString(bluetooth,"msg: hit_pull\r");
+							}
+							break;
+						case hit_pull:
+							if(hit_count == 0 && Step2_state()){
+								hit_state = hit_put;
+								TIM_SetCompare2(TIM9,1060);
+								hit_count = 100;
+								USART_SendString(bluetooth,"msg: hit_put%d\n",Step2_get_count());
+							}
+							break;
+						case hit_put:
+							if(hit_count == 0 && pitch_state == pitch_wait)
+							{
+								PGout(13) = 0;
+								hit_count = 1000;
+								Step2_moveto(0);
+								USART_SendString(MOTOR_USARTx,"5LA340000\r");
+								USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
+								hit_state = hit_push;
+								USART_SendString(bluetooth,"msg: hit_push\r");
+							}
+							break;
+						case hit_push:
+							if(hit_count == 0 && Step2_state())
+							{
+								hit_state = hit_wait;
+								USART_SendString(bluetooth,"msg: hit_wait%d\n",Step2_get_count());
+								hit_flag_count++;
+							}
+							break;
+						case hit_wait:
+							if(hit_flag_count == 3)
+							{
+								hit_state = hit_ready;
+								USART_SendString(bluetooth,"msg: hit_ready\r");
+							}
+							break;
+					}
 				}
-				
-				switch(load_state){
-					case load_ready:
-						if(hit_flag){
-							load_state = load_up;
-							PGout(12) = 1;
-							load_count = 100;
-							//USART_SendString(bluetooth,"msg: load_up\r");
-						}
-						break;
-					case load_up:
-						if(load_count == 0){
-							load_state = load_catch;
-							PGout(13) = 1;
-							TIM_SetCompare2(TIM9,1800);
-							load_count = 100;
-							//USART_SendString(bluetooth,"msg: load_catch\r");
-						}
-						break;
-					case load_catch:
-						if(load_count == 0){
-							load_state = load_down;
-							PGout(12) = 0;
-							load_count = 100;
-							//USART_SendString(bluetooth,"msg: load_down\r");
-						}
-						break;
-					case load_down:
-						if(load_count == 0){
-							load_state = load_turn;
-							Step1_moveto(Step1_get_count()+4080);
-							//USART_SendString(bluetooth,"msg: load_turn\r");
-						}
-						break;
-					case load_turn:
-						if(Step1_state()){
-							load_state = load_wait;
-							//USART_SendString(bluetooth,"msg: load_wait\r");
-							hit_flag_count++;
-						}
-						break;
-					case load_wait:
-						if(hit_flag_count == 3)
-						{
-							load_state = load_ready;
-							//USART_SendString(bluetooth,"msg: load_ready\r");
-						}
-						break;
-				}
-				
-				switch(hit_state){
-					case hit_ready:
-						if(hit_flag && load_state == load_turn)
-						{	
-							Step2_moveto(3000);
-							USART_SendString(MOTOR_USARTx,"5LA%d\r",(int)(0*10000));
-							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
-							hit_count = 1000;
-							hit_state = hit_pull;
-							//USART_SendString(bluetooth,"msg: hit_pull\r");
-						}
-						break;
-					case hit_pull:
-						if(hit_count == 0 && Step2_state()){
-							hit_state = hit_put;
-							TIM_SetCompare2(TIM9,1060);
-							hit_count = 100;
-							USART_SendString(bluetooth,"msg: hit_put%d\n",Step2_get_count());
-						}
-						break;
-					case hit_put:
-						if(hit_count == 0 && pitch_state == pitch_wait)
-						{
-							PGout(13) = 0;
-							hit_count = 1000;
-							Step2_moveto(0);
-							USART_SendString(MOTOR_USARTx,"5LA340000\r");
-							USART_SendString(MOTOR_USARTx,"5M\r5M\r5M\r");
-							hit_state = hit_push;
-							//USART_SendString(bluetooth,"msg: hit_push\r");
-						}
-						break;
-					case hit_push:
-						if(hit_count == 0 && Step2_state())
-						{
-							hit_state = hit_wait;
-							USART_SendString(bluetooth,"msg: hit_wait%d\n",Step2_get_count());
-							hit_flag_count++;
-						}
-						break;
-					case hit_wait:
-						if(hit_flag_count == 3)
-						{
-							hit_state = hit_ready;
-							//USART_SendString(bluetooth,"msg: hit_ready\r");
-						}
-						break;
-				}
-				
 				if(car_state == car_ready){
 					START.X = g_vega_pos_x* 0.0001 * 0.81;
 					START.Y = g_vega_pos_y* 0.0001 * 0.81;
@@ -418,21 +419,22 @@ int main(void)
 				errorAngle = angle;
 				Xianding = 0;
 				if (RU.ispressed)
-				{ PGout(11) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_11);
-					USART_SendString(bluetooth,"msg: RU is pressed\n");
+				{ 
+					PGout(11) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_11);
+					//USART_SendString(bluetooth,"msg: RU is pressed\n");
 				}
 				if (RR.ispressed) {
 					PGout(12) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_12);
-					USART_SendString(bluetooth,"msg: RR is pressed\n");
+					//USART_SendString(bluetooth,"msg: RR is pressed\n");
 				}
 				if (RD.ispressed) {
 					PGout(13) = !GPIO_ReadOutputDataBit(GPIOG,GPIO_Pin_13);
-					USART_SendString(bluetooth,"msg: RD is pressed\n");
+					//USART_SendString(bluetooth,"msg: RD is pressed\n");
 				}
 				if (RL.ispressed) {
-					if (TIM9->CCR2<1500) TIM_SetCompare2(TIM9,1800);
-					else TIM_SetCompare2(TIM9,1060);
-					USART_SendString(bluetooth,"msg: RL is pressed\n");
+					//if (TIM9->CCR2<1500) TIM_SetCompare2(TIM9,1800);
+					//else TIM_SetCompare2(TIM9,1060);
+					//USART_SendString(bluetooth,"msg: RL is pressed\n");
 				}
 				if (L2.ispressed) {
 					if (LU.ispressed){
